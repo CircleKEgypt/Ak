@@ -1,0 +1,326 @@
+﻿@model CK.Models.SalesParameters;
+@addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    var role = ViewBag.Role;
+    if (role == "TerrManager" || role == "FoodManager")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    else if (role == "Sales_NewS_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_T.cshtml";
+    }
+    else if (role == "Sales_NewS_Stock")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S.cshtml";
+    }
+    else if (role == "Sales_NewS")
+    {
+        Layout = "~/Views/Shared/_LayoutS.cshtml";
+    }
+    else
+    {
+        Layout = null;
+    }
+}
+<!Doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Circle K</title>
+    <script>
+        var preventBack = @Html.Raw(Json.Serialize(ViewData["PreventBack"] ?? false));
+
+        if (preventBack) {
+            window.history.pushState(null, "", location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, "", location.href);
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+
+<body class="hold-transition @* sidebar-mini layout-fixed *@">
+    @*     @ViewBag.Username
+    *@
+    <div class="preloader">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+    <div class="wrapper" style="margin-left:0;">
+        <div class="content-wrapper" style="margin-left:0;">
+            <div class="container-fluid">
+                <div class="row mb-2">
+
+                    <div class="col-sm-6">
+                    </div>
+                </div>
+            </div>
+            <form id="exportForm" asp-controller="Tender" asp-action="Index" method="post">
+                <section class="content">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <section class="col-lg-7 ">
+
+                                <div class="row" style="display: block;">
+                                    <div class="col-md-3">
+                                        <div class="card card-primary collapsed-card" style="width:1500px" id="filterCard">
+                                            <div class="card-header card-title" data-card-widget="collapse" style="color: #034C96;border:1px solid #0000004d;background-color:#0000000f">
+                                                <h3 class="card-title">Filtering</h3>
+                                                <div class="card-tools">
+                                                </div>
+                                            </div>
+                                            <div class="card-body" style="padding: 20px;transition:max-height 5s ease-in-out;">
+                                                <ul style="list-style: none;">
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" value="true" name="Parobj.RMS" id="RMS">
+                                                        <label for="RMS">RMS db</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" value="true" name="Parobj.TMT" id="TMT">
+                                                        <label for="TMT">D365 db</label>
+                                                    </li>
+                                                </ul>
+                                                <ul style="list-style: none;">
+                                                    <li class="Displayliselect">
+                                                        <label>Store Name:</label>
+                                                        <br>
+
+                                                        <select class="FilterSelect form-control" name="Parobj.Store" asp-items="@(new SelectList(ViewBag.VBStore,"Store","Name"))">
+
+                                                            <option value="0">All Stores</option>
+                                                        </select>
+                                                    </li>
+                                                    <input type="hidden" id="selectedStores" name="Parobj.Store" value="Store" />
+                                                   
+                                                </ul>
+                                                <ul>
+                                                    <li class="Displayliselect">
+                                                        <label>Date From:</label>
+                                                        <br>
+                                                        <input type="date" id="startDate" name="Parobj.startDate" class="form-control" style="width:200px;display:inline-block" required>
+                                                    </li>
+                                                    <li class="Displayliselect">
+                                                        <label>Date To:</label>
+                                                        <br>
+                                                        <input type="date" id="endDate" name="Parobj.endDate" class="form-control" style="width:200px;display:inline-block" required>
+                                                    </li>
+                                                </ul>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3" style="display: block;float:none">
+                                        <div class="card card-primary collapsed-card" style="width:1500px" id="displayFieldsCard">
+                                            <div class="card-header card-title" data-card-widget="collapse" style="color: #034C96;border:1px solid #0000004d;background-color:#0000000f">
+                                                <h3 class="card-title">Display Fields</h3>
+                                                <div class="card-tools">
+                                                </div>
+                                            </div>
+                                            <div class="card-body" style="padding: 20px;">
+                                                <ul style="list-style: none; min-width:1500px">
+
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VPaidtype" id="VPaidtype" value="true">
+                                                        <label for="VPaidtype">Tender Type</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VTotalSales" id="VTotalSales" value="true">
+                                                        <label for="VTotalSales">Total Sales</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VStoreName" id="VStoreName" value="true">
+                                                        <label for="VStoreName">Store Name</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VTransactionNumber" id="VTransactionNumber" value="true">
+                                                        <label for="VTransactionNumber">Transaction Number</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VPerDay" id="VPerDay" value="true">
+                                                        <label for="VPerDay">Day</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.VDateInTime" id="VDateInTime" value="true">
+                                                        <label for="VDateInTime">Time</label>
+                                                    </li>
+                                                    <li class="Displayli">
+                                                        <input type="checkbox" name="Parobj.Vbatch" id="Vbatch" value="true">
+                                                        <label for="Vbatch">Batch</label>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            @*                                 <img id="loader-gif" src="/images/loading-23.gif" alt="" />
+                            *@@*                                 <img id="loader-gif2" src="/images/200w.gif" alt="" />
+                            *@
+                        </div>Elapsed Time :
+                        <div id="stopwatch" style="display:inline-block">00:00:00</div><br />
+                        <button type="submit" id="exportButton" class="btn btn-primary">Execute</button>
+                    </div>
+                </section>
+            </form>
+        </div>
+    </div>
+    <script src="/js/main.js"></script>
+    <script src="/plugins/jquery/jquery.min.js"></script>
+    <script src="/dist/js/adminlte.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js">
+
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get the Batch checkbox
+            var batchCheckbox = document.getElementById('Vbatch');
+
+            // Function to disable all other checkboxes except TMT
+            function disableOtherCheckboxesExceptTMT() {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function (checkbox) {
+                    if (checkbox.id !== 'Vbatch' && checkbox.id !== 'TMT') {
+                        checkbox.disabled = batchCheckbox.checked;
+                    }
+                });
+            }
+
+            // Function to enable all other checkboxes except TMT
+            function enableOtherCheckboxesExceptTMT() {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function (checkbox) {
+                    if (checkbox.id !== 'Vbatch' && checkbox.id !== 'TMT') {
+                        checkbox.disabled = false;
+                    }
+                });
+            }
+
+            // Function to update the state of the Batch checkbox based on other checkboxes
+            function updateBatchCheckboxState() {
+                // Disable all other checkboxes except TMT if Batch is checked
+                // Otherwise, enable them
+                if (batchCheckbox.checked) {
+                    disableOtherCheckboxesExceptTMT();
+                } else {
+                    enableOtherCheckboxesExceptTMT();
+                }
+            }
+
+            // Add event listener to the Batch checkbox
+            batchCheckbox.addEventListener('change', function () {
+                updateBatchCheckboxState();
+            });
+
+            // Initially update the state of the Batch checkbox
+            updateBatchCheckboxState();
+        });
+    </script>
+    <script>
+        let startTime, elapsed = 0;
+        let stopwatchDisplay = document.getElementById('stopwatch');
+        let exportButton = document.getElementById('exportButton');
+        let exportForm = document.getElementById('exportForm');
+        let intervalId = null;
+
+        function startStopwatch() {
+            console.log('Starting stopwatch...');
+            startTime = Date.now();
+            intervalId = setInterval(() => {
+                elapsed = Date.now() - startTime;
+                stopwatchDisplay.textContent = formatElapsedTime(elapsed);
+            }, 100);
+            console.log('Stopwatch started with interval ID:', intervalId);
+        }
+
+        function stopStopwatch() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function formatElapsedTime(elapsed) {
+            let hours = Math.floor(elapsed / 3600000);
+            let minutes = Math.floor((elapsed % 3600000) / 60000);
+            let seconds = ((elapsed % 60000) / 1000).toFixed(0);
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function pad(number) {
+            return number < 10 ? '0' + number : number;
+        }
+
+        exportButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            exportButton.disabled = true;
+            startStopwatch();
+            submitExportForm(); // Submit the export form
+        });
+
+        // Event listener for the cancel export button
+        cancelExportButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            cancelExport(); // Call the cancelExport function
+        });
+
+        // Function to handle export submission
+        function submitExportForm() {
+            exportForm.submit(); // Submit the export form
+            checkExportStatus(); // Check export status immediately after submission
+
+            // Set up an interval to check export status periodically
+            checkStatusInterval = setInterval(checkExportStatus, 1000);
+        }
+
+        function checkExportStatus() {
+            $.ajax({
+                url: '/Tender/CheckExportStatus',
+                type: 'GET',
+                success: function (status) {
+                    console.log(status);
+                    if (status === 'complete') {
+                        stopStopwatch();
+                        exportButton.disabled = false;
+                        // setTimeout(function () {
+                        //     exportForm.submit();
+                        // }, 100);
+                    } else {
+                        setTimeout(checkExportStatus, 1000);
+                    }
+                },
+                error: function () {
+                    exportButton.disabled = false;
+                }
+            });
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @*   @section Scripts {
+    <script type="text/javascript">
+    window.addEventListener('beforeunload', function (event) {
+    // Make an AJAX call to a server-side endpoint that clears the session or marks the user as logged out
+    fetch('/Account/Logout', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ logout: true }),
+    });
+    });
+    </script>
+    }  *@
+</body>
+</html>
+

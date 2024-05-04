@@ -1,0 +1,279 @@
+﻿@model CK.Models.SalesParameters;
+@addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<!Doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Circle K</title>
+    <script>
+        var preventBack = @Html.Raw(Json.Serialize(ViewData["PreventBack"] ?? false));
+
+        if (preventBack) {
+            window.history.pushState(null, "", location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, "", location.href);
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        
+
+    </style>
+</head>
+
+
+<body class="hold-transition @* sidebar-mini layout-fixed *@">
+    <div class="preloader">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+    <div class="wrapper" style="margin-left:0;">
+        <div class="content-wrapper" style="margin-left:0;">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+
+                        <div class="col-sm-6">
+                        </div>
+                    </div>
+                </div>
+                <form id="exportForm" asp-controller="Home" asp-action="Store" method="post">
+                    <section class="content">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <section class="col-lg-7 ">
+
+                                    <div class="row" style="display: block;">
+                                        <div class="col-md-3">
+                                        <ul>
+                                            <li class="Displayliselect">
+                                                <label>Date From:</label>
+                                                <br>
+                                                <input type="date" id="startDate" name="Parobj.startDate" class="form-control" style="width:200px;display:inline-block" required>
+                                            </li>
+                                            <li class="Displayliselect">
+                                                <label>Date To:</label>
+                                                <br>
+                                                <input type="date" id="endDate" name="Parobj.endDate" class="form-control" style="width:200px;display:inline-block" required>
+                                            </li>
+                                        </ul>
+                       
+                                            <br>
+                                        <select class="FilterSelect form-control" name="Parobj.Department" asp-items="@(new SelectList(ViewBag.VBDepartment,"Code","Name"))"style=" display: none;">
+                                                <option value="0">All Department</option>
+                                            </select>
+                                        <select class="FilterSelect form-control" name="Parobj.Store" asp-items="@(new SelectList(ViewBag.VBStore,"Store","Name"))" style="display: none;">
+                                            <option value="0">All Stores</option>
+                                        </select>
+                                             
+                                                        <input type="hidden" id="selectedStores" name="Parobj.Store" value="Store" />
+                                        </div>
+                                    </div>
+                                </section>
+                          </div>Elapsed Time :
+                            <div id="stopwatch" style="display:inline-block">00:00:00</div><br />
+                            <button type="submit" id="exportButton" class="btn btn-primary" >Execute</button>
+                        </div>
+                    </section>
+                </form>
+            </div>
+        </div>
+    <script src="/js/main.js"></script>
+    <script src="/plugins/jquery/jquery.min.js"></script>
+    <script src="/dist/js/adminlte.js"></script>
+
+    <script>
+        let startTime, elapsed = 0;
+        let stopwatchDisplay = document.getElementById('stopwatch');
+        let exportButton = document.getElementById('exportButton');
+        let exportForm = document.getElementById('exportForm');
+        let intervalId = null;
+
+        function startStopwatch() {
+            console.log('Starting stopwatch...');
+            startTime = Date.now();
+            intervalId = setInterval(() => {
+                elapsed = Date.now() - startTime;
+                stopwatchDisplay.textContent = formatElapsedTime(elapsed);
+            }, 100);
+            console.log('Stopwatch started with interval ID:', intervalId);
+        }
+
+        function stopStopwatch() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function formatElapsedTime(elapsed) {
+            let hours = Math.floor(elapsed / 3600000);
+            let minutes = Math.floor((elapsed % 3600000) / 60000);
+            let seconds = ((elapsed % 60000) / 1000).toFixed(0);
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function pad(number) {
+            return number < 10 ? '0' + number : number;
+        }
+
+        function isYesterday(date) {
+            var today = new Date();
+            var yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            return date.getDate() === yesterday.getDate() &&
+                date.getMonth() === yesterday.getMonth() &&
+                date.getFullYear() === yesterday.getFullYear() &&
+                today.getHours() < 16; // 16 is the 4th hour of the day
+            ;
+        }
+            //      || (startDate.getDay() === 6 && dayOfWeek === 6)
+            // || (endDate.getDay() === 5 && dayOfWeek === 5 && endDate=getDate()) || (endDate.getDay() === 6 && dayOfWeek === 6))
+        function checkDates() {
+            var startDateInput = document.getElementById('startDate');
+            var endDateInput = document.getElementById('endDate');
+
+            var startDate = new Date(startDateInput.value);
+            var endDate = new Date(endDateInput.value);
+            var today = new Date();
+            var dayOfWeek = today.getDay();
+            // Check if today is Friday and startDate is Friday and today's date is the same as startDate
+            if (dayOfWeek === 4 && (endDate.getDay() === 4) &&
+                (endDate.getDate() === today.getDate())) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Thursday .');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 4 && (startDate.getDay() === 4) &&
+                (startDate.getDate() === today.getDate())) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Thursday .');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 5 && (startDate.getDay() === 5 || startDate.getDay() === 4) &&
+                (startDate.getDate() === today.getDate() || startDate.getDate() === today.getDate() - 1 )) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Friday .');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 5 && (endDate.getDay() === 5 || endDate.getDay() === 4) &&
+                (endDate.getDate() === today.getDate() || endDate.getDate() === today.getDate() - 1)) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Friday .');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 6 && (startDate.getDay() === 6 || startDate.getDay() === 5 || startDate.getDay() === 4) &&
+                (startDate.getDate() === today.getDate() || startDate.getDate() === today.getDate() - 1 || startDate.getDate() === today.getDate() - 2)) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Saturday or Friday.');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 6 && (endDate.getDay() === 6 || endDate.getDay() === 5) &&
+                (endDate.getDate() === today.getDate() || endDate.getDate() === today.getDate() - 1)) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Saturday or Friday .');
+                return true; // Return true to indicate that the export should not proceed
+            }
+            if (dayOfWeek === 0 && today.getHours() < 16 && (startDate.getDay() === 0 || startDate.getDay() === 5 || startDate.getDay() === 4 || startDate.getDay() === 7 || startDate.getDay() === 6) &&
+                (startDate.getDate() === today.getDate() || startDate.getDate() === today.getDate() - 1 || startDate.getDate() === today.getDate() - 2 || startDate.getDate() === today.getDate() - 3
+                    || startDate.getDate() === today.getDate() - 4)) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Sunday or Saturday or Friday.');
+                return true; // Return true to indicate that the export should not proceed
+                    }
+                if (dayOfWeek === 0 && today.getHours() < 16 && (endDate.getDay() === 0 || endDate.getDay() === 5 || endDate.getDay() === 4 || endDate.getDay() === 7 || endDate.getDay() === 6) &&
+                    (endDate.getDate() === today.getDate() || endDate.getDate() === today.getDate() - 1 || endDate.getDate() === today.getDate() - 2 || endDate.getDate() === today.getDate() - 3
+                        || endDate.getDate() === today.getDate() - 4)) {
+                    // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if today and Date From are on Sunday or Saturday or Friday.');
+                    return true; // Return true to indicate that the export should not proceed
+                }
+                
+            // //
+            // if (dayOfWeek === 6 && (startDate.getDay() === 6 || startDate.getDay() === 5)
+            // && (startDate.getDate() === today.getDate() || startDate.getDate() === today.getDate()-1)
+            // ) {
+            //     alert('Export is not allowed if today and startDate are on Sat-1 and the same date.');
+            //     return true; // Return true to indicate that the export should not proceed
+            // }
+            if (isYesterday(startDate) || isYesterday(endDate)) {
+                alert('Alert: startDate or endDate is equal to yesterday and time before 4 o\'clock.');
+                return true; // Return true if either date is yesterday
+            }
+            return false; // Return false if neither date is yesterday
+        }
+
+        exportButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (checkDates()) {
+                // If either date is yesterday, do not continue with the rest of the code
+                return;
+            }
+            exportButton.disabled = true;
+            startStopwatch();
+            submitExportForm(); // Submit the export form
+        });
+
+        // Event listener for the cancel export button
+        // Assuming cancelExportButton is defined elsewhere in your script
+        cancelExportButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            cancelExport(); // Call the cancelExport function
+        });
+
+        // Function to handle export submission
+        function submitExportForm() {
+            exportForm.submit(); // Submit the export form
+            checkExportStatus(); // Check export status immediately after submission
+
+            // Set up an interval to check export status periodically
+            checkStatusInterval = setInterval(checkExportStatus, 1000);
+        }
+
+        function checkExportStatus() {
+            $.ajax({
+                url: '/Home/CheckExportStatus',
+                type: 'GET',
+                success: function (status) {
+                    console.log(status);
+                    if (status === 'complete') {
+                        stopStopwatch();
+                        exportButton.disabled = false;
+                    } else {
+                        setTimeout(checkExportStatus, 1000);
+                    }
+                },
+                error: function () {
+                    exportButton.disabled = false;
+                }
+            });
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    @*   @section Scripts {
+    <script type="text/javascript">
+    window.addEventListener('beforeunload', function (event) {
+    // Make an AJAX call to a server-side endpoint that clears the session or marks the user as logged out
+    fetch('/Account/Logout', {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ logout: true }),
+    });
+    });
+    </script>
+    }  *@
+</body>
+</html>

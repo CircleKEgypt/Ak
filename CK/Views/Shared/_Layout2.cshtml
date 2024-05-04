@@ -1,0 +1,670 @@
+﻿@addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+<!Doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Circle K</title>
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.min.css">
+    <link rel="stylesheet" href="/css/test.css" />
+    <link rel="stylesheet" href="/plugins/bootstrap/date.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.2/css/pikaday.min.css">
+    <!--for date-->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Datepicker JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    @*     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    *@
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Add Bootstrap CSS (you may have this already) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <!-- Add Bootstrap JS (you may have this already) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="/Scripts/sweetalert.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var filterCard = document.getElementById('filterCard');
+            var displayFieldsCard = document.getElementById('displayFieldsCard');
+
+            // Event listener for filtering card toggle
+            filterCard.querySelector('.card-title').addEventListener('click', function () {
+                toggleCard(filterCard, displayFieldsCard);
+            });
+
+            // Event listener for display fields card toggle
+            displayFieldsCard.querySelector('.card-title').addEventListener('click', function () {
+                toggleCard(displayFieldsCard, filterCard);
+            });
+
+            function toggleCard(cardToShow, cardToHide) {
+                var cardBodyToShow = cardToShow.querySelector('.card-body');
+                var cardBodyToHide = cardToHide.querySelector('.card-body');
+
+
+                // Toggle the visibility of the card to show
+                cardBodyToShow.style.display = cardBodyToShow.style.display === 'none' ? 'block' : 'none';
+
+                // Hide the card to hide
+                cardBodyToHide.style.display = 'none';
+                cardBodyToShow.style.display = 'none';
+            }
+
+        });</script>
+    <script>
+        var preventBack = @Html.Raw(Json.Serialize(ViewData["PreventBack"] ?? false));
+
+        if (preventBack) {
+            window.history.pushState(null, "", location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, "", location.href);
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <style>
+        .nav-link {
+            font-weight: bold !important;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 5px;
+            border-color: transparent transparent transparent #cdc4c4;
+            transform: translateY(-50%) rotate(-270deg);
+            margin: auto;
+        }
+
+        .Sales::after {
+            content: none;
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 5px;
+            border-color: transparent transparent transparent #cdc4c4;
+            transform: translateY(-50%) rotate(-270deg);
+            margin: auto;
+        }
+        .nav-item {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            max-width: 200px;
+        }
+
+            .dropdown-menu a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+            }
+
+        .nav-item:hover .dropdown-menu {
+            display: block;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .navbar-expand .navbar-nav .nav-link {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+            margin-right: 30px;
+        }
+
+        .logout {
+            position: absolute;
+            right: 5%;
+            top: 25%;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stopwatch-container {
+            text-align: center;
+        }
+
+        #display {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        a.nav-link {
+            width: max-content;
+        }
+
+        .Displayli label {
+            cursor: pointer;
+        }
+
+            .Displayli label:hover {
+                background-color: #ffff;
+            }
+
+        #loader-gif {
+            display: none;
+            position: absolute;
+            top: 26%;
+            width: 32%;
+            left: 25%;
+        }
+
+        #loader-gif2 {
+            display: none;
+            position: absolute;
+            top: 25%;
+            left: 85%;
+        }
+
+        .disabled-link {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        /*         .Storedropdown, .Supplierdropdown  {
+                            max-height: 380px;
+                            overflow-y: auto;
+                        }
+
+                        .dp
+                        {
+                            max-height: 280px;
+                            overflow-y: auto;
+                        }
+                        .disabled-link {
+                            opacity: 0.5;
+                            pointer-events: none;
+                        }
+
+                        .Store-dropdown, .department-dropdown {
+                            width: 100%;
+                            margin-bottom: 20px;
+                        }
+
+                        .btn.btn-default.dropdown-toggle {
+                            background-color: #f8f9fa;
+                            border-color: #ced4da;
+                            color: #495057;
+                            padding: 10px 20px;
+                            border-radius: 4px;
+                            font-size: 16px;
+                            transition: background-color 0.3s ease;
+                        }
+
+                            .btn.btn-default.dropdown-toggle:hover {
+                                background-color: #e9ecef;
+                            }
+
+                      /*   /* Styles for the dropdown menu
+                        .Storedropdown, .Supplierdropdown, .dp {
+                            background-color: #fff;
+                            border: 1px solid rgba(0,0,0,.15);
+                            border-radius: 4px;
+                            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+                            padding: 6px;
+                            font-size: 16px;
+                            width: 100%;
+                        }
+
+                        .dropdown-menu2 {
+                            background-color: #fff;
+                            border: 1px solid rgba(0,0,0,.15);
+                            border-radius: 4px;
+                            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+                            padding: 6px;
+                            font-size: 16px;
+                            width: 100%;
+                        }  */
+        /* Styles for the checkboxes */
+        .form-check {
+            display: flex;
+            align-items: center; /* Aligns items vertically in the center */
+            margin-bottom: 10px; /* Adds some space between each item */
+        }
+
+        /* Ensure the label is displayed inline with the checkbox */
+        .form-check-label {
+            margin-left: 10px; /* Adds some space between the checkbox and the label */
+            margin-bottom: 0; /* Removes any bottom margin to align with the checkbox */
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            top: 0;
+        }
+
+        .form-check-label {
+            margin-left: 10px; /* Adds some space between the checkbox and the label */
+            margin-bottom: 0; /* Removes any bottom margin to align with the checkbox */
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            top: 0;
+        }
+
+        #searchBox {
+            margin-bottom: 10px;
+            padding: 6px 12px;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .Storedropdown, .dp, .sub {
+            max-height: 380px; /* Adjust as needed */
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+            padding: 6px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        /* Additional styles */
+        .Store-dropdown, .department-dropdown, .supplier-dropdown {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="hold-transition @* sidebar-mini layout-fixed *@">
+    <div class="preloader">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+    <div class="wrapper" style="margin-left:0;position: unset;">
+
+        <nav class="main-header navbar navbar-expand-lg navbar-white navbar-light" style="background-color: #a60f0f; margin-left: 0;">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a asp-action="Logout" asp-controller="Home" class="logout" style="color: #cdc4c4">Logout <span>@ViewBag.Username</span></a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                        <a asp-controller="Home" asp-action="Store" class="nav-link Sales" style="color:#cdc4c4">Sales</a>
+                    </li>
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                    </li>
+
+                </ul>
+       </div>
+            </nav>
+        <div class="content-wrapper" style="margin-left:0;">
+    @RenderBody()
+            <footer class="main-footer" style="margin-left:0  ; margin-left: 0; width: 100%;bottom: 0;position: absolute;">
+            <strong>Copyright &copy; 2024 <a href="">Circle K</a>.</strong>
+            All rights reserved.
+        </footer>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    @* <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var checkboxes = document.querySelectorAll('.multi-select-dropdown .form-check-input');
+            var hiddenInput = document.getElementById('selectedStores');
+
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    var selectedValues = Array.from(checkboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+
+                    // Update the hidden input field with the selected values
+                    hiddenInput.value = selectedValues.join(',');
+                });
+            });
+        });
+    </script> *@
+    <script language="javascript">
+        var matchEnterdDate = 0;
+        //function to set back date opacity for non supported browsers
+        window.onload = function () {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'date');
+            input.setAttribute('value', 'some text');
+            if (input.value === "some text") {
+                allDates = document.getElementsByClassName("xDateContainer");
+                matchEnterdDate = 1;
+                for (var i = 0; i < allDates.length; i++) {
+                    allDates[i].style.opacity = "1";
+                }
+            }
+        }
+        //function to convert enterd date to any format
+        function setCorrect(xObj, xTraget) {
+            var date = new Date(xObj.value);
+            var month = date.getMonth();
+            var day = date.getDate();
+            var year = date.getFullYear();
+            if (month != 'NaN') {
+                document.getElementById(xTraget).value = day + " / " + month + " / " + year;
+            } else {
+                if (matchEnterdDate == 1) { document.getElementById(xTraget).value = xObj.value; }
+            }
+        }
+    </script>
+    @* <script>
+
+        let startTime, elapsed = 0;
+        let stopwatchDisplay = document.getElementById('stopwatch');
+        let exportButton = document.getElementById('exportButton');
+        let exportForm = document.getElementById('exportForm');
+        let intervalId = null;
+
+        function startStopwatch() {
+            console.log('Starting stopwatch...'); // Debugging statement
+            startTime = Date.now();
+            intervalId = setInterval(() => {
+                elapsed = Date.now() - startTime;
+                stopwatchDisplay.textContent = formatElapsedTime(elapsed);
+            }, 100);
+            console.log('Stopwatch started with interval ID:', intervalId); // Debugging statement
+        }
+
+        function stopStopwatch() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        function resetStopwatch() {
+            // Reset the elapsed time and update the display
+            elapsed = 0;
+            stopwatchDisplay.textContent = formatElapsedTime(elapsed);
+        }
+        resetStopwatch();
+
+        function formatElapsedTime(elapsed) {
+            let hours = Math.floor(elapsed / 3600000);
+            let minutes = Math.floor((elapsed % 3600000) / 60000);
+            let seconds = ((elapsed % 60000) / 1000).toFixed(0);
+            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function pad(number) {
+            return number < 10 ? '0' + number : number;
+        }
+
+        function checkExportStatus() {
+            $.ajax({
+                url: '/Home2/CheckExportStatus',
+                type: 'GET',
+                success: function (status) {
+                    if (status === 'complete') {
+                        // Stop the stopwatch and reset it
+                        stopStopwatch();
+                        exportButton.disabled = false;
+                        $("#loader-gif").hide();
+                        $("#loader-gif2").hide();
+                        // alert('Export to Excel completed');
+                        // Re-enable the export button
+                    } else {
+                        // If the export is not yet complete, continue checking
+                        setTimeout(checkExportStatus, 1000);
+                    }
+                },
+                error: function () {
+                    // Handle errors here
+                    stopStopwatch();
+                    resetStopwatch();
+                    alert('An error occurred while checking the export status.');
+
+                    // Re-enable the export button
+                    exportButton.disabled = false;
+                }
+            });
+        }
+
+        // Event listener for the export button
+        exportButton.addEventListener('click', function (event) {
+            $("#loader-gif").show();
+            $("#loader-gif2").show();
+            // Prevent the default form submission to allow our custom logic
+            event.preventDefault();
+
+            // Disable the button to prevent multiple clicks
+            exportButton.disabled = true;
+
+            // Start the stopwatch
+            startStopwatch();
+
+            // Start checking the export status
+            checkExportStatus();
+
+            // Manually submit the form after starting the stopwatch and checking the export status
+            exportForm.submit();
+        });
+    </script> *@
+
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script>
+            // Function to show an alert with the current date and time minus 10 seconds
+            function showAlertWithTime() {
+                // Calculate the current date and time minus 10 seconds
+                var now = new Date();
+                var tenSecondsAgo = new Date(now.getTime() - 1800000); // 10000 milliseconds = 10 seconds
+
+                // Format the date and time
+                var formattedTime = tenSecondsAgo.toLocaleString();
+
+                // Display an alert with the formatted time
+                alert("You have been active for 30 minutes. Please sign in again. ");
+                window.location.reload();
+            }
+
+            // Schedule the function to be called after 20 seconds
+            setTimeout(showAlertWithTime, 1800000); // 20000 milliseconds = 20 seconds
+            // window.location.href = window.location.href;
+        </script>
+    <script src="/plugins/jquery/jquery.min.js"></script>
+    <script src="/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+@*     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get references to the Quantity and Cost checkboxes
+            var ItemLookupCodeCheckbox = document.querySelector('input[name="Parobj.VItemLookupCode"]');
+            var ItemNameCheckbox = document.querySelector('input[name="Parobj.VItemName"]');
+            var costCheckbox = document.querySelector('input[name="Parobj.VCost"]');
+            var priceCheckbox = document.querySelector('input[name="Parobj.VPrice"]');
+
+            function toggleCostCheckbox() {
+                costCheckbox.disabled = !(ItemLookupCodeCheckbox.checked || ItemNameCheckbox.checked);
+                priceCheckbox.disabled = !(ItemLookupCodeCheckbox.checked || ItemNameCheckbox.checked);
+            }
+
+            toggleCostCheckbox();
+
+            ItemLookupCodeCheckbox.addEventListener('change', toggleCostCheckbox);
+            ItemNameCheckbox.addEventListener('change', toggleCostCheckbox);
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var itemBarcodeCheckbox = document.getElementById('VItemLookupCode');
+            var itemNameCheckbox = document.getElementById('VItemName');
+            var costCheckbox = document.getElementById('VCost');
+            var priceCheckbox = document.getElementById('VPrice');
+            var displayLiItems = document.querySelectorAll('.Displayli');
+
+            function isItemBarcodeCostOrPrice(element) {
+                return (
+                    element === costCheckbox.parentElement ||
+                    element === priceCheckbox.parentElement ||
+                    element === itemBarcodeCheckbox.parentElement ||
+                    element === itemNameCheckbox.parentElement
+                );
+            }
+
+            function updateHoverEffect() {
+                var hoveredClass = 'hovered';
+
+                displayLiItems.forEach(function (displayLi) {
+                    var label = displayLi.querySelector('label');
+
+                    if (!isItemBarcodeCostOrPrice(displayLi)) {
+                        label.classList.add(hoveredClass);
+                    } else {
+                        label.classList.remove(hoveredClass);
+                    }
+                });
+            }
+
+            function handleLabelClick(event) {
+                var checkbox = this.previousElementSibling;
+                var displayLi = checkbox.parentElement;
+
+                if (!isItemBarcodeCostOrPrice(displayLi)) {
+                    checkbox.checked = !checkbox.checked;
+                    event.preventDefault(); // Prevent the default action of the label click
+                }
+            }
+
+            function enableLabelClickForItemName() {
+                costCheckbox.parentElement.querySelector('label').classList.add('hovered');
+                priceCheckbox.parentElement.querySelector('label').classList.add('hovered');
+            }
+
+            itemBarcodeCheckbox.addEventListener('change', function () {
+                updateHoverEffect();
+                if (itemBarcodeCheckbox.checked) {
+                    enableLabelClickForItemName();
+                }
+            });
+
+            itemNameCheckbox.addEventListener('change', function () {
+                updateHoverEffect();
+                if (itemNameCheckbox.checked) {
+                    enableLabelClickForItemName();
+                }
+            });
+
+            displayLiItems.forEach(function (displayLi) {
+                displayLi.addEventListener('mouseenter', function () {
+                    if (!isItemBarcodeCostOrPrice(displayLi)) {
+                        displayLi.classList.add('hovered');
+                    }
+                });
+
+                displayLi.addEventListener('mouseleave', function () {
+                    if (!isItemBarcodeCostOrPrice(displayLi)) {
+                        displayLi.classList.remove('hovered');
+                    }
+                });
+
+                // Add event listener for label clicks
+                var label = displayLi.querySelector('label');
+                label.addEventListener('click', handleLabelClick);
+            });
+
+            // Initialize hover effect based on the initial state of the item barcode checkbox
+            updateHoverEffect();
+        });
+    </script> *@
+       @*  <script type="text/javascript">
+            window.addEventListener('beforeunload', function (event) {
+                event.preventDefault();
+                fetch('/Home/LogOut', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({})
+                });
+            });
+        </script> *@
+        <script src="/js/main.js"></script>
+        <script src="/plugins/jquery/jquery.min.js"></script>
+        <script src="/plugins/jquery-ui/jquery-ui.min.js"></script>
+        <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/plugins/chart.js/Chart.min.js"></script>
+        <script src="/plugins/sparklines/sparkline.js"></script>
+        <script src="/plugins/jqvmap/jquery.vmap.min.js"></script>
+        <script src="/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+        <script src="/plugins/jquery-knob/jquery.knob.min.js"></script>
+        <script src="/plugins/moment/moment.min.js"></script>
+        <script src="/plugins/daterangepicker/daterangepicker.js"></script>
+        <script src="/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+        <script src="/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+        <script src="/dist/js/adminlte.js"></script>
+        <script src="/js/main.js"></script>
+</body>
+</html>
+

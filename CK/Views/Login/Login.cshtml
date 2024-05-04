@@ -1,0 +1,84 @@
+﻿@{
+	ViewData["Title"] = "Login";
+	//Layout = "_Layout";
+	Layout = null;
+
+}
+
+<!Doctype html>
+<html>
+<head>
+	<title>Login CK</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="~/vendor/bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="~/LoginIndexCss/css/util.css">
+	<link rel="stylesheet" type="text/css" href="~/LoginIndexCss/css/main.css">
+</head>
+<body>
+
+	<div class="limiter">
+		<div class="container-login100" style="background-image: url('/images/bg-01.jpg');">
+			<img sre ="/images/bg-01.jpg" />
+                    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                    {
+                        <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+                    }
+				<div class="wrap-login100 p-t-30 p-b-50" style="margin-left:8%">
+				
+				<form class="login100-form validate-form p-b-33 p-t-5" style="margin-top:35%" method="post" action="/Login/Login" autocomplete="off">
+					<div class="wrap-input100 validate-input" data-validate="Enter username">
+							<input class="input100" type="text" name="username" placeholder="User name">
+						<span class="focus-input100">
+							<svg style="position: absolute; top: 35%; left: 6%; width: 25px; height: 25px; color: #a60f0f;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+								<path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+							</svg>
+						</span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate="Enter password">
+						<input class="input100" type="password" name="password" placeholder="Password" id="password" required>
+						<span class="focus-input100" ">
+							<svg style="position: absolute; top: 35%; left: 6%; width: 25px; height: 25px; color: #a60f0f;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
+								<path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2M5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1" />
+							</svg>
+						</span>
+					</div>
+					<div class="container-login100-form-btn m-t-32">
+						<button type="submit" class="login100-form-btn">Login</button>
+					
+					</div>
+
+				</form>
+			</div>
+
+		</div>
+	</div>
+
+
+	<div id="dropDownSelect1"></div>
+@* 	@section Scripts {
+		<script type="text/javascript">
+			window.addEventListener('beforeunload', function (event) {
+				// Make an AJAX call to a server-side endpoint that clears the session or marks the user as logged out
+				fetch('/Login/Login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ logout: true }),
+				});
+			});
+		</script>
+	} *@
+	<script src="~/vendor/jquery/jquery-3.2.1.min.js"></script>
+	<script src="~/vendor/animsition/js/animsition.min.js"></script>
+	<script src="~/vendor/bootstrap/js/popper.js"></script>
+	<script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
+	<script src="~/vendor/select2/select2.min.js"></script>
+	<script src="~/vendor/daterangepicker/moment.min.js"></script>
+	<script src="~/vendor/daterangepicker/daterangepicker.js"></script>
+	<script src="~/vendor/countdowntime/countdowntime.js"></script>
+	<script src="~/LoginIndexJs/main.js"></script>
+</body>
+</html>

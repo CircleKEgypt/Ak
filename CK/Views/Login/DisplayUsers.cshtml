@@ -1,0 +1,55 @@
+﻿@model List<CK.Models.User>
+@{
+    ViewData["Title"] = "DisplayUsers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>Display Users</h2>
+<a asp-controller="Login" asp-action="CreateUser" class="btn btn-primary">Create User</a>
+<!Doctype html>
+<html>
+    <head>
+    <style>
+        .main-footer {
+            position: relative !important;
+        }
+    </style>
+    </head>
+    <body>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.User1</td>
+                    <td>@user.Password</td>
+                    <td>@user.Role</td>
+                    <td>@user.Department</td>
+                    <td>
+                        <form asp-controller="Login" asp-action="EditUser" method="get">
+                            <input type="hidden" name="Id" value="@user.Id" />
+                            <button type="submit" class="btn btn-primary">Edit</button>
+                        </form>
+                        <form asp-controller="Login" asp-action="DeleteUser" method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            <input type="hidden" name="Id" value="@user.Id" />
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    </body>
+</html>

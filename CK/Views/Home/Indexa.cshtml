@@ -1,0 +1,26 @@
+﻿@model IEnumerable<CK.Models.RptUsers2>
+    @{
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+    }
+
+<h2>Store Users</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Password Encrpted</th>
+            <th>Password</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.Password</td>
+                 <td>@user.DecryptedPassword</td>
+             </tr>
+        }
+    </tbody>
+</table>

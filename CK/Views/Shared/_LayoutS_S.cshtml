@@ -1,0 +1,419 @@
+﻿@addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+<!Doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Circle K</title>
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.min.css">
+    <link rel="stylesheet" href="/css/test.css" />
+    <link rel="stylesheet" href="/plugins/bootstrap/date.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.2/css/pikaday.min.css">
+    <!--for date-->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Datepicker JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    @*     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    *@
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Add Bootstrap CSS (you may have this already) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <!-- Add Bootstrap JS (you may have this already) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="/Scripts/sweetalert.min.js"></script>
+    <script type="text/javascript">
+        // Clear local storage
+        localStorage.clear();
+
+        // Clear session storage
+        sessionStorage.clear();
+
+        // Clear IndexedDB
+        // Note: This is a simplified example. Clearing IndexedDB databases requires more detailed code.
+        var deleteRequest = indexedDB.deleteDatabase("yourDatabaseName");
+        deleteRequest.onsuccess = function (event) {
+            console.log("Database deleted successfully.");
+        };
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var filterCard = document.getElementById('filterCard');
+            var displayFieldsCard = document.getElementById('displayFieldsCard');
+
+            // Event listener for filtering card toggle
+            filterCard.querySelector('.card-title').addEventListener('click', function () {
+                toggleCard(filterCard, displayFieldsCard);
+            });
+
+            // Event listener for display fields card toggle
+            displayFieldsCard.querySelector('.card-title').addEventListener('click', function () {
+                toggleCard(displayFieldsCard, filterCard);
+            });
+
+            function toggleCard(cardToShow, cardToHide) {
+                var cardBodyToShow = cardToShow.querySelector('.card-body');
+                var cardBodyToHide = cardToHide.querySelector('.card-body');
+
+
+                // Toggle the visibility of the card to show
+                cardBodyToShow.style.display = cardBodyToShow.style.display === 'none' ? 'block' : 'none';
+
+                // Hide the card to hide
+                cardBodyToHide.style.display = 'none';
+                cardBodyToShow.style.display = 'none';
+            }
+
+        });</script>
+    <script>
+        var preventBack = @Html.Raw(Json.Serialize(ViewData["PreventBack"] ?? false));
+
+        if (preventBack) {
+            window.history.pushState(null, "", location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, "", location.href);
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <style>
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 5px;
+            border-color: transparent transparent transparent #cdc4c4;
+            transform: translateY(-50%) rotate(-270deg);
+            margin: auto;
+        }
+
+        .Sales::after {
+            content: none;
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 5px 0 5px 5px;
+            border-color: transparent transparent transparent #cdc4c4;
+            transform: translateY(-50%) rotate(-270deg);
+            margin: auto;
+        }
+        .nav-item {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            max-width: 200px;
+        }
+
+            .dropdown-menu a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+            }
+
+        .nav-item:hover .dropdown-menu {
+            display: block;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .navbar-expand .navbar-nav .nav-link {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+            margin-right: 30px;
+        }
+
+        .logout {
+            position: absolute;
+            right: 5%;
+            top: 25%;
+            font-weight: bold;
+            color: white;
+        }
+
+        .stopwatch-container {
+            text-align: center;
+        }
+
+        #display {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        a.nav-link {
+            width: max-content;
+        }
+
+        .Displayli label {
+            cursor: pointer;
+        }
+
+            .Displayli label:hover {
+                background-color: #ffff;
+            }
+
+        #loader-gif {
+            display: none;
+            position: absolute;
+            top: 26%;
+            width: 32%;
+            left: 25%;
+        }
+
+        #loader-gif2 {
+            display: none;
+            position: absolute;
+            top: 25%;
+            left: 85%;
+        }
+
+        .disabled-link {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+      
+        /* Styles for the checkboxes */
+        .form-check {
+            display: flex;
+            align-items: center; /* Aligns items vertically in the center */
+            margin-bottom: 10px; /* Adds some space between each item */
+        }
+
+        /* Ensure the label is displayed inline with the checkbox */
+        .form-check-label {
+            margin-left: 10px; /* Adds some space between the checkbox and the label */
+            margin-bottom: 0; /* Removes any bottom margin to align with the checkbox */
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            top: 0;
+        }
+
+        .form-check-label {
+            margin-left: 10px; /* Adds some space between the checkbox and the label */
+            margin-bottom: 0; /* Removes any bottom margin to align with the checkbox */
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            top: 0;
+        }
+
+        #searchBox {
+            margin-bottom: 10px;
+            padding: 6px 12px;
+            font-size: 16px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .Storedropdown, .dp, .sub {
+            max-height: 380px; /* Adjust as needed */
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.15);
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+            padding: 6px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        /* Additional styles */
+        .Store-dropdown, .department-dropdown, .supplier-dropdown {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .nav-link {
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+<body class="hold-transition @* sidebar-mini layout-fixed *@">
+    <div class="preloader">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+    <div class="wrapper" style="margin-left:0;position: unset;">
+
+        <nav class="main-header navbar navbar-expand-lg navbar-white navbar-light" style="background-color: #a60f0f; margin-left: 0;">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>           
+
+            <a asp-action="Logout" asp-controller="Home" class="logout" style="color: #cdc4c4">Logout <span>@ViewBag.Username</span></a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                        <a asp-controller="Home" asp-action="Index" class="nav-link Sales" style="color:#cdc4c4">Sales</a>
+                    </li>
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                        <a class="nav-link disabled-link" style="color:#cdc4c4" asp-controller="#" asp-action="#">Stock</a>
+                        @* <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Option 1</a></li>
+                        <li><a class="dropdown-item" href="#">Option 2</a></li>
+                        <li><a class="dropdown-item" href="#">Option 3</a></li>
+                        <li><a class="dropdown-item" href="#">Option 4</a></li>
+                        <li><a class="dropdown-item" href="#">Option 5</a></li>
+                        </ul> *@
+                    </li>
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                    </li>
+
+                </ul>
+       </div>
+            </nav>
+        <div class="content-wrapper" style="margin-left:0;">
+    @RenderBody()
+            <footer class="main-footer" style="margin-left:0  ; margin-left: 0; width: 100%;bottom: 0;position: absolute;">
+            <strong>Copyright &copy; 2024 <a href="">Circle K</a>.</strong>
+            All rights reserved.
+        </footer>
+    </div>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script>
+            // Function to show an alert with the current date and time minus 10 seconds
+            function showAlertWithTime() {
+                // Calculate the current date and time minus 10 seconds
+                var now = new Date();
+                var tenSecondsAgo = new Date(now.getTime() - 1800000); // 10000 milliseconds = 10 seconds
+
+                // Format the date and time
+                var formattedTime = tenSecondsAgo.toLocaleString();
+
+                // Display an alert with the formatted time
+                alert("You have been active for 30 minutes. Please sign in again. ");
+                window.location.reload();
+            }
+
+            // Schedule the function to be called after 20 seconds
+            setTimeout(showAlertWithTime, 1800000); // 20000 milliseconds = 20 seconds
+            // window.location.href = window.location.href;
+        </script>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script language="javascript">
+        var matchEnterdDate = 0;
+        //function to set back date opacity for non supported browsers
+        window.onload = function () {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'date');
+            input.setAttribute('value', 'some text');
+            if (input.value === "some text") {
+                allDates = document.getElementsByClassName("xDateContainer");
+                matchEnterdDate = 1;
+                for (var i = 0; i < allDates.length; i++) {
+                    allDates[i].style.opacity = "1";
+                }
+            }
+        }
+        //function to convert enterd date to any format
+        function setCorrect(xObj, xTraget) {
+            var date = new Date(xObj.value);
+            var month = date.getMonth();
+            var day = date.getDate();
+            var year = date.getFullYear();
+            if (month != 'NaN') {
+                document.getElementById(xTraget).value = day + " / " + month + " / " + year;
+            } else {
+                if (matchEnterdDate == 1) { document.getElementById(xTraget).value = xObj.value; }
+            }
+        }
+    </script>
+    <script src="/plugins/jquery/jquery.min.js"></script>
+    <script src="/plugins/jquery-ui/jquery-ui.min.js"></script>
+    <script>
+        $.widget.bridge('uibutton', $.ui.button)
+    </script>
+        <script src="/js/main.js"></script>
+        <script src="/plugins/jquery/jquery.min.js"></script>
+        <script src="/plugins/jquery-ui/jquery-ui.min.js"></script>
+        <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/plugins/chart.js/Chart.min.js"></script>
+        <script src="/plugins/sparklines/sparkline.js"></script>
+        <script src="/plugins/jqvmap/jquery.vmap.min.js"></script>
+        <script src="/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+        <script src="/plugins/jquery-knob/jquery.knob.min.js"></script>
+        <script src="/plugins/moment/moment.min.js"></script>
+        <script src="/plugins/daterangepicker/daterangepicker.js"></script>
+        <script src="/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+        <script src="/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+        <script src="/dist/js/adminlte.js"></script>
+        <script src="/js/main.js"></script>
+</body>
+</html>
+
