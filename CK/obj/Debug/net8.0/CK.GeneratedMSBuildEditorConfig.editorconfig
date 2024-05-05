@@ -17,99 +17,99 @@ build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = CK
 build_property.RootNamespace = CK
-build_property.ProjectDir = D:\CK\CircleK\CK\
+build_property.ProjectDir = D:\Ak\CK\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = D:\CK\CircleK\CK
+build_property.MSBuildProjectDirectory = D:\Ak\CK
 build_property._RazorSourceGeneratorDebug = 
 
-[D:/CK/CircleK/CK/Views/Home/Home.cshtml]
+[D:/Ak/CK/Views/Home/Home.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxIb21lLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/HomeStore.cshtml]
+[D:/Ak/CK/Views/Home/HomeStore.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxIb21lU3RvcmUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/Index.cshtml]
+[D:/Ak/CK/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/Index2.cshtml]
+[D:/Ak/CK/Views/Home/Index2.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleDIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/Indexa.cshtml]
+[D:/Ak/CK/Views/Home/Indexa.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleGEuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/Privacy.cshtml]
+[D:/Ak/CK/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Home/Store.cshtml]
+[D:/Ak/CK/Views/Home/Store.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxTdG9yZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Login/CreateUser.cshtml]
+[D:/Ak/CK/Views/Login/CreateUser.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cQ3JlYXRlVXNlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Login/DisplayUsers.cshtml]
+[D:/Ak/CK/Views/Login/DisplayUsers.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cRGlzcGxheVVzZXJzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Login/EditUser.cshtml]
+[D:/Ak/CK/Views/Login/EditUser.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cRWRpdFVzZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Login/Login - Copy.cshtml]
+[D:/Ak/CK/Views/Login/Login - Copy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cTG9naW4gLSBDb3B5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Login/Login.cshtml]
+[D:/Ak/CK/Views/Login/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cTG9naW4uY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Shared/Error.cshtml]
+[D:/Ak/CK/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Shared/_ValidationScriptsPartial.cshtml]
+[D:/Ak/CK/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Tender/Index.cshtml]
+[D:/Ak/CK/Views/Tender/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuZGVyXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/_ViewImports.cshtml]
+[D:/Ak/CK/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/_ViewStart.cshtml]
+[D:/Ak/CK/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/CK/CircleK/CK/Views/Shared/_Layout.cshtml]
+[D:/Ak/CK/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-j0bgd3kj0p
 
-[D:/CK/CircleK/CK/Views/Shared/_Layout2.cshtml]
+[D:/Ak/CK/Views/Shared/_Layout2.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = b-qqf48gesx3
 
-[D:/CK/CircleK/CK/Views/Shared/_LayoutS.cshtml]
+[D:/Ak/CK/Views/Shared/_LayoutS.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = b-eqpmtbbivc
 
-[D:/CK/CircleK/CK/Views/Shared/_LayoutS_S.cshtml]
+[D:/Ak/CK/Views/Shared/_LayoutS_S.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTX1MuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-15r4s48yln
 
-[D:/CK/CircleK/CK/Views/Shared/_LayoutS_T.cshtml]
+[D:/Ak/CK/Views/Shared/_LayoutS_T.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTX1QuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-rzgx66gom2

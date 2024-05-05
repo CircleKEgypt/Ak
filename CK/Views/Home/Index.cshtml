@@ -287,6 +287,7 @@
 
         <script>
         let startTime, elapsed = 0;
+        let checkStatusInterval; // Define checkStatusInterval in a scope accessible to both functions
         let stopwatchDisplay = document.getElementById('stopwatch');
         let exportButton = document.getElementById('exportButton');
         let exportForm = document.getElementById('exportForm');
@@ -389,7 +390,7 @@
             exportForm.submit(); // Submit the export form
            
                 checkExportStatus(); // Check export status immediately after submission
-
+         return;
                 // Set up an interval to check export status periodically
                 checkStatusInterval = setInterval(checkExportStatus, 1000);
 
@@ -402,15 +403,13 @@
                 success: function (status) {
                     console.log(status);
                     if (status === 'unknown1') {
-                        alert('an error occurred during the export process. please try again.');
-                        clearinterval(checkstatusinterval);
-                    }
-                    else if  (status === 'complete') {
+                        alert('An error occurred during the export process. Please try again.');
+                        clearInterval(checkStatusInterval); // Clear the interval on error
+                    } else if (status === 'complete') {
                         stopStopwatch();
                         exportButton.disabled = false;
-                        // setTimeout(function () {
-                        //     exportForm.submit();
-                        // }, 100);
+                        // Optionally, clear the interval to stop checking the status if the process is complete
+                        clearInterval(checkStatusInterval);
                     } else {
                         setTimeout(checkExportStatus, 1000);
                     }
@@ -418,8 +417,7 @@
                 error: function () {
                     alert('An error occurred during the export process. Please try again.');
                     exportButton.disabled = false;
-                    // Optionally, clear the interval to stop checking the status if an error occurs
-                    clearInterval(checkStatusInterval);
+                    clearInterval(checkStatusInterval); // Clear the interval on error
                 }
             });
         }

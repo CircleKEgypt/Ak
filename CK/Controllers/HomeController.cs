@@ -31,20 +31,7 @@ namespace CK.Controllers
     [Authorize]
     public class HomeController : Controller
     {
-        //public static AsyncPolicy GetTransientErrorRetryPolicy()
-        //{
-        //    return Policy
-        //        .Handle<Exception>() // Replace with specific exception types if needed
-        //        .WaitAndRetryAsync(3, retryAttempt =>
-        //            TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Exponential backoff
-        //            (exception, timeSpan, context) =>
-        //            {
-        //                // Log or handle the exception here
-        //                Console.WriteLine($"An exception occurred when contacting the service. Waiting {timeSpan} before next retry.");
-        //            });
-        //}
         private readonly ILogger<HomeController> _logger;
-
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
@@ -401,7 +388,7 @@ namespace CK.Controllers
             DateTime startDateTime = Convert.ToDateTime(Parobj.startDate, new CultureInfo("en-GB"));
             DateTime endDateTime = Convert.ToDateTime(Parobj.endDate, new CultureInfo("en-GB"));
             string[] storeVal = Parobj.Store.Split(':');
-            if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
+            if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS")
             {
                 if (Parobj.VSupplierId || Parobj.VSupplierName)
                 {
@@ -425,7 +412,14 @@ namespace CK.Controllers
             }
             else
             {
-                fromWhereClause = "from RptSalesall WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                if (Parobj.VSupplierId || Parobj.VSupplierName)
+                {
+                    fromWhereClause = "from RptSalesAllwithSuppllier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                }
+                else
+                {
+                    fromWhereClause = "from RptSalesAll WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                }
             }
            // string MessageBox = string.Empty;
             // Add department filter if a department is specified
