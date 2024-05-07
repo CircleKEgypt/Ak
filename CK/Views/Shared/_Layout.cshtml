@@ -312,10 +312,11 @@
     <div class="wrapper" style="margin-left:0;position: unset;">
 
         <nav class="main-header navbar navbar-expand-lg navbar-white navbar-light" style="background-color: #a60f0f; margin-left: 0;">
+
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
-            </button>           
-
+            </button>
+            <a asp-action="DisplayUsers" asp-controller="Login" style="color: #cdc4c4;float:right;font-weight:bold;position:absolute;right:10%;top:25%;;">Users </a> 
             <a asp-action="Logout" asp-controller="Home" class="logout" style="color: #cdc4c4">Logout <span>@ViewBag.Username</span></a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
