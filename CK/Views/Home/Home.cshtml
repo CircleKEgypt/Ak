@@ -2,7 +2,11 @@
     var role = ViewBag.Role;
     if (role == "TerrManager" || role == "FoodManager")
     {
-        Layout = "~/Views/Shared/_Layout.cshtml";
+        Layout = "~/Views/Shared/_Layout.cshtml"; 
+    }
+    else if (role == "Sales_NewS_Stock_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_T.cshtml";
     }
     else if (role == "Sales_NewS_Tender")
     {

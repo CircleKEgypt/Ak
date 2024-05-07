@@ -323,7 +323,7 @@ namespace CK.Controllers
             }
         }
         public IActionResult ExportToExcel(string connectionString, SalesParameters Parobj)
-        {
+         {
             DataCenterContext db = new DataCenterContext();
             CkproUsersContext db2 = new CkproUsersContext();
             CkhelperdbContext db3 = new CkhelperdbContext();
@@ -388,7 +388,7 @@ namespace CK.Controllers
             DateTime startDateTime = Convert.ToDateTime(Parobj.startDate, new CultureInfo("en-GB"));
             DateTime endDateTime = Convert.ToDateTime(Parobj.endDate, new CultureInfo("en-GB"));
             string[] storeVal = Parobj.Store.Split(':');
-            if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS")
+            if ((Parobj.RMS && Parobj.TMT == false )||(Parobj.RMS&& storeVal[0] == "RMS"))
             {
                 if (Parobj.VSupplierId || Parobj.VSupplierName)
                 {
@@ -651,8 +651,8 @@ namespace CK.Controllers
                         }
                     }
                     // Create a new Excel package
-                    try
-                    {
+               //     try
+                //    {
                         using (var package = new ExcelPackage())
                         {
                             ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("AKSalesReport");
@@ -917,11 +917,11 @@ namespace CK.Controllers
                             HttpContext.Session.SetString("ExportStatus", "complete");
                             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "AKHelperSales.xlsx");
                         }
-                    }
-                    catch {
-                        HttpContext.Session.SetString("ExportStatus", "unKnown1");
-                        return View();
-                    }
+                   // }
+                //    catch {
+                 //       HttpContext.Session.SetString("ExportStatus", "unKnown1");
+                //        return View();
+                  //  }
                 }
             }
         }

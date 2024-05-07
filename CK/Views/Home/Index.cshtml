@@ -6,6 +6,10 @@
     {
         Layout = "~/Views/Shared/_Layout.cshtml";
     }
+    else if (role == "Sales_NewS_Stock_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_T.cshtml";
+    }
     else if (role == "Sales_NewS_Tender")
     {
         Layout = "~/Views/Shared/_LayoutS_T.cshtml";
@@ -18,7 +22,7 @@
     {
         Layout = "~/Views/Shared/_LayoutS.cshtml";
     }
-    else 
+    else
     {
         Layout = null;
     }

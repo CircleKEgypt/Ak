@@ -4053,3 +4053,4 @@ D:\Ak\CK\obj\Debug\net8.0\refint\CK.dll
 D:\Ak\CK\obj\Debug\net8.0\CK.pdb
 D:\Ak\CK\obj\Debug\net8.0\CK.genruntimeconfig.cache
 D:\Ak\CK\obj\Debug\net8.0\ref\CK.dll
+D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_S_T.cshtml.rz.scp.css

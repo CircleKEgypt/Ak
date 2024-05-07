@@ -148,6 +148,11 @@
             var endDate = new Date(endDateInput.value);
             var today = new Date();
             var dayOfWeek = today.getDay();
+            if (endDate.getDate() === today.getDate() || startDate.getDate() === today.getDate()) {
+                // && startDate.getMonth() === today.getMonth() && startDate.getFullYear() === today.getFullYear()) {
+                alert('Export is not allowed if Date from or To is Today .');
+                return true; // Return true to indicate that the export should not proceed
+            }
             // Check if today is Friday and startDate is Friday and today's date is the same as startDate
             if (dayOfWeek === 4 && (endDate.getDay() === 4) &&
                 (endDate.getDate() === today.getDate())) {
