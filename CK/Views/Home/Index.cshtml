@@ -2,7 +2,7 @@
 @addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     var role = ViewBag.Role;
-    if (role == "TerrManager" || role == "FoodManager")
+    if (role == "Manager")
     {
         Layout = "~/Views/Shared/_Layout.cshtml";
     }
@@ -14,11 +14,15 @@
     {
         Layout = "~/Views/Shared/_LayoutS_T.cshtml";
     }
+    else if (role == "TerrManager")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_F.cshtml";
+    }
     else if (role == "Sales_NewS_Stock")
     {
         Layout = "~/Views/Shared/_LayoutS_S.cshtml";
     }
-    else if (role == "Sales_NewS")
+    else if (role == "Sales_NewS" || role == "FoodManager")
     {
         Layout = "~/Views/Shared/_LayoutS.cshtml";
     }

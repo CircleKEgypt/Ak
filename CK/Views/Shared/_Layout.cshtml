@@ -214,10 +214,6 @@
             width: max-content;
         }
 
-        .Displayli label {
-            cursor: pointer;
-        }
-
             .Displayli label:hover {
                 background-color: #ffff;
             }
@@ -316,12 +312,16 @@
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <a asp-action="DisplayUsers" asp-controller="Login" style="color: #cdc4c4;float:right;font-weight:bold;position:absolute;right:10%;top:25%;;">Users </a> 
+            <a asp-action="DisplayUsers" asp-controller="Login" style="color: #cdc4c4;float:right;font-weight:bold;position:absolute;right:2%;top:25%;;">Users </a> 
             <a asp-action="Logout" asp-controller="Home" class="logout" style="color: #cdc4c4">Logout <span>@ViewBag.Username</span></a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
 @*                     <li class="nav-item @isSalesVisible d-sm-inline-block mr-2">
- *@                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                    *@
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                        <a asp-controller="Branches" asp-action="DisplayStores" class="nav-link Sales" style="color:#cdc4c4">Branches</a>
+                    </li>
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
                         <a asp-controller="Home" asp-action="Index" class="nav-link Sales" style="color:#cdc4c4">Sales</a>
                     </li>
                     <li class="nav-item d-none d-sm-inline-block mr-2">
@@ -335,7 +335,7 @@
                         </ul> *@
                     </li>
                     <li class="nav-item d-none d-sm-inline-block mr-2">
-                        <a class="nav-link disabled-link" style="color:#cdc4c4" asp-controller="#" asp-action="#">Stock</a>
+                        <a class="nav-link" style="color:#cdc4c4" asp-controller="Stock" asp-action="Index">Stock</a>
                         @* <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#">Option 1</a></li>
                         <li><a class="dropdown-item" href="#">Option 2</a></li>

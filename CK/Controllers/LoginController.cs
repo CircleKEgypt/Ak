@@ -221,6 +221,10 @@ namespace CK.Controllers
         public IActionResult CreateUser()
         {
             var user = new User();
+            var username = HttpContext.Session.GetString("Username");
+            var Role = HttpContext.Session.GetString("Role");
+            ViewBag.Username = username;
+            ViewBag.Role = Role;
             return View();
         }
         public string encrypt(string clearText)
@@ -282,6 +286,10 @@ namespace CK.Controllers
         }
         public IActionResult DisplayUsers()
         {
+            var username = HttpContext.Session.GetString("Username");
+            var Role = HttpContext.Session.GetString("Role");
+            ViewBag.Username = username;
+            ViewBag.Role = Role;
             var users = _dbContext.Users.ToList();
             return View(users);
         }
@@ -289,6 +297,10 @@ namespace CK.Controllers
         [HttpGet]
         public async Task<IActionResult> EditUser(int? id)
         {
+            var username = HttpContext.Session.GetString("Username");
+            var Role = HttpContext.Session.GetString("Role");
+            ViewBag.Username = username;
+            ViewBag.Role = Role;
             var user = await _dbContext.Users.FindAsync(id);
             user.Password = Decrypt(user.Password);
             return View(user);

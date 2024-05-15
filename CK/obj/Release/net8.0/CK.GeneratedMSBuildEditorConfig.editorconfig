@@ -26,6 +26,26 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = D:\Ak\CK
 build_property._RazorSourceGeneratorDebug = 
 
+[D:/Ak/CK/Views/Branches/CreateStore.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQnJhbmNoZXNcQ3JlYXRlU3RvcmUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Ak/CK/Views/Branches/DisplayStores.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQnJhbmNoZXNcRGlzcGxheVN0b3Jlcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Ak/CK/Views/Branches/EditStore.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQnJhbmNoZXNcRWRpdFN0b3JlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Ak/CK/Views/Home/ATransferSol.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxBVHJhbnNmZXJTb2wuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Ak/CK/Views/Home/ATransferSol1.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxBVHJhbnNmZXJTb2wxLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Ak/CK/Views/Home/Home.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxIb21lLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -36,10 +56,6 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/Ak/CK/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[D:/Ak/CK/Views/Home/Index2.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleDIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Ak/CK/Views/Home/Indexa.cshtml]
@@ -82,8 +98,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Ak/CK/Views/Stock/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RvY2tcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Ak/CK/Views/Tender/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuZGVyXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Ak/CK/Views/Tender/TenderFromBranch.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVuZGVyXFRlbmRlckZyb21CcmFuY2guY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Ak/CK/Views/_ViewImports.cshtml]
@@ -98,6 +122,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-j0bgd3kj0p
 
+[D:/Ak/CK/Views/Shared/_Layout0.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQwLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = b-y8xxvavi1o
+
 [D:/Ak/CK/Views/Shared/_Layout2.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = b-qqf48gesx3
@@ -109,6 +137,10 @@ build_metadata.AdditionalFiles.CssScope = b-eqpmtbbivc
 [D:/Ak/CK/Views/Shared/_LayoutS_S.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTX1MuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-15r4s48yln
+
+[D:/Ak/CK/Views/Shared/_LayoutS_S_F.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTX1NfRi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = b-5msxznws3h
 
 [D:/Ak/CK/Views/Shared/_LayoutS_S_T.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRTX1NfVC5jc2h0bWw=

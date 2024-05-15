@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CK.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CK.Models;
@@ -19,11 +20,11 @@ public partial class DataCenterContext : DbContext
 
     public virtual DbSet<Item> Items { get; set; }
 
+    public virtual DbSet<R> Rs { get; set; }
+
     public virtual DbSet<RptSale> RptSales { get; set; }
 
     public virtual DbSet<RptSalesAll> RptSalesAlls { get; set; }
-
-    public virtual DbSet<RptSalesAx> RptSalesAxes { get; set; }
 
     public virtual DbSet<RptSalesAxt> RptSalesAxts { get; set; }
 
@@ -39,6 +40,8 @@ public partial class DataCenterContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.UseCollation("Arabic_CI_AS");
+
         modelBuilder.Entity<Department>(entity =>
         {
             entity.HasKey(e => new { e.Id, e.Storeid }).HasName("PK_department_1");
@@ -174,6 +177,36 @@ public partial class DataCenterContext : DbContext
                 .HasDefaultValue("");
         });
 
+        modelBuilder.Entity<R>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("RS");
+
+            entity.Property(e => e.Barcode)
+                .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Day)
+                .HasMaxLength(30)
+                .IsUnicode(false);
+            entity.Property(e => e.FromTable)
+                .HasMaxLength(10)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Item)
+                .HasMaxLength(60)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Quantity).HasColumnType("numeric(32, 6)");
+            entity.Property(e => e.Status)
+                .HasMaxLength(8)
+                .IsUnicode(false);
+            entity.Property(e => e.ToTable)
+                .HasMaxLength(10)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Transaction)
+                .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+        });
+
         modelBuilder.Entity<RptSale>(entity =>
         {
             entity
@@ -181,32 +214,36 @@ public partial class DataCenterContext : DbContext
                 .ToView("RptSales");
 
             entity.Property(e => e.Cost).HasColumnType("money");
+            entity.Property(e => e.Dmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("DManager");
             entity.Property(e => e.DpId)
                 .HasMaxLength(17)
                 .HasColumnName("DpID");
             entity.Property(e => e.DpName).HasMaxLength(30);
+            entity.Property(e => e.Fmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("FManager");
             entity.Property(e => e.ItemId).HasColumnName("ItemID");
             entity.Property(e => e.ItemLookupCode).HasMaxLength(25);
             entity.Property(e => e.ItemName).HasMaxLength(30);
             entity.Property(e => e.Price).HasColumnType("money");
-            entity.Property(e => e.StoreFirstTransactionDate).HasColumnName("Store_FIRST_TRANSACTION_DATE");
-            entity.Property(e => e.StoreFranchise)
-                .HasMaxLength(50)
-                .HasColumnName("StoreFranchise");
-            entity.Property(e => e.StoreGov).HasMaxLength(50);
+            entity.Property(e => e.StoreFranchise).HasMaxLength(50);
             entity.Property(e => e.StoreId).HasColumnName("StoreID");
-            entity.Property(e => e.StoreName)
-                .HasMaxLength(50)
-                .HasColumnName("StoreName");
-            entity.Property(e => e.StoreNameD365).HasMaxLength(50);
-            entity.Property(e => e.StorePriceCat)
-                .HasMaxLength(10)
-                .IsFixedLength();
-            entity.Property(e => e.StoreType).HasMaxLength(50);
-            entity.Property(e => e.SupplierCode).HasMaxLength(17);
-            entity.Property(e => e.SupplierName).HasMaxLength(30);
+            entity.Property(e => e.StoreName).HasMaxLength(50);
+            entity.Property(e => e.SupplierCode1)
+                .HasMaxLength(20)
+                .IsUnicode(false);
             entity.Property(e => e.Tax).HasColumnType("money");
             entity.Property(e => e.TransTime).HasColumnType("datetime");
+            entity.Property(e => e.TransactionNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.Username)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
         });
 
         modelBuilder.Entity<RptSalesAll>(entity =>
@@ -215,130 +252,49 @@ public partial class DataCenterContext : DbContext
                 .HasNoKey()
                 .ToView("RptSalesAll");
 
-            entity.Property(e => e.Cost).HasColumnType("numeric(32, 6)");
+            entity.Property(e => e.Dmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("DManager");
             entity.Property(e => e.DpId)
-                .HasMaxLength(20)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS")
                 .HasColumnName("DpID");
             entity.Property(e => e.DpName)
-                .HasMaxLength(254)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Fmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("FManager");
             entity.Property(e => e.ItemLookupCode)
-                .HasMaxLength(25)
+                .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.ItemName)
-                .HasMaxLength(60)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Price)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("price");
+            entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.Qty).HasColumnName("qty");
             entity.Property(e => e.StoreFranchise)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreFranchise");
-            entity.Property(e => e.StoreName)
-                .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SupplierCode)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SupplierName)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Tax).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.TransTime).HasColumnType("datetime");
-        });
-
-        modelBuilder.Entity<RptSalesAx>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("RptSalesAx");
-
-            entity.Property(e => e.Categoryid).HasColumnName("CATEGORYID");
-            entity.Property(e => e.Channel).HasColumnName("CHANNEL");
-            entity.Property(e => e.Costamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("COSTAMOUNT");
-            entity.Property(e => e.Currency)
-                .HasMaxLength(3)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("CURRENCY");
-            entity.Property(e => e.Discamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("DISCAMOUNT");
-            entity.Property(e => e.DpId)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DpName)
-                .HasMaxLength(254)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Entrystatus).HasColumnName("ENTRYSTATUS");
-            entity.Property(e => e.Inventstatussales).HasColumnName("INVENTSTATUSSALES");
-            entity.Property(e => e.Inventtransid)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("INVENTTRANSID");
-            entity.Property(e => e.ItemLookupCode)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ItemName)
-                .HasMaxLength(60)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Linenum)
-                .HasColumnType("numeric(32, 16)")
-                .HasColumnName("LINENUM");
-            entity.Property(e => e.Listingid)
-                .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("LISTINGID");
-            entity.Property(e => e.Netamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("NETAMOUNT");
-            entity.Property(e => e.Netprice)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("NETPRICE");
-            entity.Property(e => e.Originalprice)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("ORIGINALPRICE");
-            entity.Property(e => e.Price).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Qty).HasColumnType("numeric(32, 6)");
             entity.Property(e => e.StoreId)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreID");
-            entity.Property(e => e.StoreName)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SupplierCode)
                 .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.StoreIdR)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+            entity.Property(e => e.StoreName)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SupplierName)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Taxamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("TAXAMOUNT");
-            entity.Property(e => e.TotalSales).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.TotalSalesWithoutTax).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Totaldiscamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("TOTALDISCAMOUNT");
             entity.Property(e => e.TransTime).HasColumnType("datetime");
             entity.Property(e => e.TransactionNumber)
-                .HasMaxLength(20)
+                .HasMaxLength(50)
+                .IsUnicode(false)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Transactionid)
-                .HasMaxLength(44)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("TRANSACTIONID");
-            entity.Property(e => e.Transactionstatus).HasColumnName("TRANSACTIONSTATUS");
-            entity.Property(e => e.Type).HasColumnName("TYPE");
-            entity.Property(e => e.Unit)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("UNIT");
+            entity.Property(e => e.Username)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
         });
 
         modelBuilder.Entity<RptSalesAxt>(entity =>
@@ -347,89 +303,15 @@ public partial class DataCenterContext : DbContext
                 .HasNoKey()
                 .ToView("RptSalesAxt");
 
-            entity.Property(e => e.Categoryid).HasColumnName("CATEGORYID");
-            entity.Property(e => e.Channel).HasColumnName("CHANNEL");
-            entity.Property(e => e.Cost).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Currency)
-                .HasMaxLength(3)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("CURRENCY");
-            entity.Property(e => e.Discamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("DISCAMOUNT");
-            entity.Property(e => e.DpId)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DpName)
-                .HasMaxLength(254)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Entrystatus).HasColumnName("ENTRYSTATUS");
-            entity.Property(e => e.Inventstatussales).HasColumnName("INVENTSTATUSSALES");
-            entity.Property(e => e.Inventtransid)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("INVENTTRANSID");
             entity.Property(e => e.ItemLookupCode)
                 .HasMaxLength(20)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.ItemName)
                 .HasMaxLength(60)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Linenum)
-                .HasColumnType("numeric(32, 16)")
-                .HasColumnName("LINENUM");
-            entity.Property(e => e.Listingid)
-                .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("LISTINGID");
-            entity.Property(e => e.Netamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("NETAMOUNT");
-            entity.Property(e => e.Netprice)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("NETPRICE");
-            entity.Property(e => e.Originalprice)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("ORIGINALPRICE");
-            entity.Property(e => e.Price).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Qty).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.StoreFranchise)
-                .HasMaxLength(3)
-                .IsUnicode(false);
-            entity.Property(e => e.StoreId)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreID");
-            entity.Property(e => e.StoreName)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SupplierCode)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.SupplierName)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Tax).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.TotalCostQty).HasColumnType("numeric(38, 6)");
-            entity.Property(e => e.TotalSales).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.TotalSalesTax).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.TotalSalesWithoutTax).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Totaldiscamount)
-                .HasColumnType("numeric(32, 6)")
-                .HasColumnName("TOTALDISCAMOUNT");
-            entity.Property(e => e.TransTime).HasColumnType("datetime");
-            entity.Property(e => e.TransactionNumber)
                 .HasMaxLength(20)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TransactionNumber2)
-                .HasMaxLength(44)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Transactionstatus).HasColumnName("TRANSACTIONSTATUS");
-            entity.Property(e => e.Type).HasColumnName("TYPE");
-            entity.Property(e => e.Unit)
-                .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("UNIT");
         });
 
         modelBuilder.Entity<Store>(entity =>

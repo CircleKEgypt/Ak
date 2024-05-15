@@ -1,0 +1,94 @@
+﻿@model List<CK.Models.R>
+@{
+    Layout = null;
+}
+<!Doctype html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.5/css/dataTables.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+    <style>
+        .dt-search {
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+    <form id="transferForm">
+
+        <div>
+            <button style="display:inline-block;">Execute</button>
+
+            <br>
+            <label for="transferId">Transfer ID:</label>
+            <input type="text" id="transferId" name="transferId" />
+        </div>
+    </form>
+    @if (Model != null && Model.Any())
+    {
+        <table id="example" class="table">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Quantity</th>
+                    <th>Item</th>
+                    <th>Barcode</th>
+                    <th>Day</th>
+                    <th>Transaction</th>
+                    <th>To</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <img src="/images/bg-01.jpg" width="200px" />
+                        </td>
+                        <td>@item.FromTable</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Item</td>
+                        <td>@item.Barcode</td>
+                        <td>@item.Day</td>
+                        <td>@item.Transaction</td>
+                        <td>@item.ToTable</td>
+                        <td>@item.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.0.5/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var table = $('#example').DataTable({
+                pageLength: 20, // Set the number of rows per page
+                lengthChange: true, // Enable the length change input control
+                dom: 'Blfrtip', // Define the placement of the buttons
+                buttons: [
+                    'pdf' // Specify the buttons
+                ]
+            });
+
+            // Move the buttons to the top of the table
+            new $.fn.dataTable.Buttons(table, {
+                buttons: [
+                    'pdf'
+                ]
+            }).container().appendTo($('#example_wrapper').find('.col-sm-6:eq(0)'));
+        });
+
+    </script>
+</body>
+</html>

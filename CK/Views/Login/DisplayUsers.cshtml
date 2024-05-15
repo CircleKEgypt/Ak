@@ -1,10 +1,50 @@
 ﻿@model List<CK.Models.User>
 @{
-    ViewData["Title"] = "DisplayUsers";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    var role = ViewBag.Role;
+    var user = ViewBag.Username;
+    if (user == "newm" || user == "AK")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout0.cshtml";
+    }
 }
+@* @{
+    var role = ViewBag.Role;
+    if (role == "Manager")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    else if (role == "Sales_NewS_Stock_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_T.cshtml";
+    }
+    else if (role == "Sales_NewS_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_T.cshtml";
+    }
+    else if (role == "TerrManager")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_F.cshtml";
+    }
+    else if (role == "Sales_NewS_Stock")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S.cshtml";
+    }
+    else if (role == "Sales_NewS" || role == "FoodManager")
+    {
+        Layout = "~/Views/Shared/_LayoutS.cshtml";
+    }
+    else
+    {
+        Layout = null;
+    }
+} *@
 <h2>Display Users</h2>
 <a asp-controller="Login" asp-action="CreateUser" class="btn btn-primary">Create User</a>
+<a asp-controller="Home" asp-action="Home" class="btn btn-primary">Home</a>
 <!Doctype html>
 <html>
     <head>

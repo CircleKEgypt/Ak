@@ -1,9 +1,48 @@
 ﻿@model CK.Models.User
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    var role = ViewBag.Role;
+    var user = ViewBag.Username;
+    if (user == "newm" || user == "AK")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout0.cshtml";
+    }
 }
-
+@* @{
+    var role = ViewBag.Role;
+    if (role == "Manager")
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    else if (role == "Sales_NewS_Stock_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_T.cshtml";
+    }
+    else if (role == "Sales_NewS_Tender")
+    {
+        Layout = "~/Views/Shared/_LayoutS_T.cshtml";
+    }
+    else if (role == "TerrManager")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S_F.cshtml";
+    }
+    else if (role == "Sales_NewS_Stock")
+    {
+        Layout = "~/Views/Shared/_LayoutS_S.cshtml";
+    }
+    else if (role == "Sales_NewS" || role == "FoodManager")
+    {
+        Layout = "~/Views/Shared/_LayoutS.cshtml";
+    }
+    else
+    {
+        Layout = null;
+    }
+} *@
 <h1>EditUser</h1>
 
 <form asp-action="EditUser" method="post">
@@ -22,7 +61,8 @@
         <label asp-for="Password">Role</label>
         <div class="form-group">
             <select asp-for="Role" class="FilterSelect form-control" style="width:235px">
-                <option value="TerrManager">Manager</option>
+                <option value="Manager">Manager</option>
+                <option value="TerrManager">TerrManager</option>
                 <option value="FoodManager">Food Manager</option>
                 <option value="Sales_NewS">Sales_NewS</option>
                 <option value="Sales_NewS_Stock">Sales_NewS_Stock</option>

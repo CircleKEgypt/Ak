@@ -4041,9 +4041,12 @@ D:\Ak\CK\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.CK.props
 D:\Ak\CK\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.CK.props
 D:\Ak\CK\obj\Debug\net8.0\staticwebassets.pack.json
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
+D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout0.cshtml.rz.scp.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout2.cshtml.rz.scp.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS.cshtml.rz.scp.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_S.cshtml.rz.scp.css
+D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_S_F.cshtml.rz.scp.css
+D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_S_T.cshtml.rz.scp.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_T.cshtml.rz.scp.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\bundle\CK.styles.css
 D:\Ak\CK\obj\Debug\net8.0\scopedcss\projectbundle\CK.bundle.scp.css
@@ -4053,4 +4056,3 @@ D:\Ak\CK\obj\Debug\net8.0\refint\CK.dll
 D:\Ak\CK\obj\Debug\net8.0\CK.pdb
 D:\Ak\CK\obj\Debug\net8.0\CK.genruntimeconfig.cache
 D:\Ak\CK\obj\Debug\net8.0\ref\CK.dll
-D:\Ak\CK\obj\Debug\net8.0\scopedcss\Views\Shared\_LayoutS_S_T.cshtml.rz.scp.css

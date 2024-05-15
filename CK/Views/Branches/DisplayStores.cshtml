@@ -1,0 +1,163 @@
+﻿@model List<CK.Models.Storeuser>
+@{
+        Layout = null;
+}
+<h2>Display Stores</h2>
+<a asp-controller="Branches" asp-action="CreateStore" class="btn btn-primary">Create Store</a>
+<a asp-controller="Home" asp-action="Home" class="btn btn-primary">Home</a>
+
+<!Doctype html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.5/css/dataTables.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Tempusdominus Bootstrap 4 -->
+    <link rel="stylesheet" href="/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+    <!-- JQVMap -->
+    <link rel="stylesheet" href="/plugins/jqvmap/jqvmap.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+    <!-- Daterange picker -->
+    <link rel="stylesheet" href="/plugins/daterangepicker/daterangepicker.css">
+    <!-- summernote -->
+    <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.min.css">
+    <link rel="stylesheet" href="/css/test.css" />
+    <link rel="stylesheet" href="/plugins/bootstrap/date.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.2/css/pikaday.min.css">
+    <!--for date-->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Datepicker JS -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    @*     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    *@
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <!-- Add Bootstrap CSS (you may have this already) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .dt-search {
+            float: right;
+        }
+    </style>
+
+</head>
+<body>
+
+    <table id="example" class="table">
+        <thead>
+            <tr>
+                <th>Edit</th>
+                <th>Delete</th>
+                <th>Inventlocation</th>
+                <th>Storenumber</th>
+                <th>Name</th>
+                <th>Server</th>
+                <th>RmsstoNumber</th>
+                <th>Id</th>
+                <th>Email</th>
+                <th>Dbase</th>
+                <th>PriceCategory</th>
+                <th>Franchise</th>
+                <th>Company</th>
+                <th>Zkip</th>
+                <th>StartDate</th>
+                <th>ArabicN</th>
+                <th>District</th>
+                <th>Dmanager</th>
+                <th>Fmanager</th>
+                <th>Password</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var store in Model)
+            {
+                <tr>
+                    <td>
+                        <form asp-controller="Branches" asp-action="EditStore" method="get">
+                            <input type="hidden" name="Id" value="@store.Id" />
+                            <button type="submit" class="btn btn-primary">Edit</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form asp-controller="Branches" asp-action="DeleteStore" method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            <input type="hidden" name="Id" value="@store.Id" />
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                    <td>@store.Inventlocation</td>
+                    <td>@store.Storenumber</td>
+                    <td>@store.Name</td>
+                    <td>@store.Server</td>
+                    <td>@store.RmsstoNumber</td>
+                    <td>@store.Id</td>
+                    <td>@store.Email</td>
+                    <td>@store.Dbase</td>
+                    <td>@store.PriceCategory</td>
+                    <td>@store.Franchise</td>
+                    <td>@store.Company</td>
+                    <td>@store.Zkip</td>
+                    <td>@store.StartDate</td>
+                    <td>@store.ArabicN</td>
+                    <td>@store.District</td>
+                    <td>@store.Dmanager</td>
+                    <td>@store.Fmanager</td>
+                    <td>@store.Password</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/2.0.5/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var table = $('#example').DataTable({
+                pageLength: 20, // Set the number of rows per page
+                lengthChange: true, // Enable the length change input control
+                dom: 'Blfrtip', // Define the placement of the buttons
+                buttons: [
+                    'pdf' // Specify the buttons
+                ]
+            });
+
+            // Move the buttons to the top of the table
+            new $.fn.dataTable.Buttons(table, {
+                buttons: [
+                    'pdf'
+                ]
+            }).container().appendTo($('#example_wrapper').find('.col-sm-6:eq(0)'));
+        });
+
+    </script>
+</body>
+</html>

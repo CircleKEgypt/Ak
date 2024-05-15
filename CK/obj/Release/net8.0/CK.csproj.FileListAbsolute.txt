@@ -1370,3 +1370,5 @@ D:\Ak\CK\obj\Release\net8.0\CK.pdb
 D:\Ak\CK\obj\Release\net8.0\CK.genruntimeconfig.cache
 D:\Ak\CK\obj\Release\net8.0\ref\CK.dll
 D:\Ak\CK\obj\Release\net8.0\scopedcss\Views\Shared\_LayoutS_S_T.cshtml.rz.scp.css
+D:\Ak\CK\obj\Release\net8.0\scopedcss\Views\Shared\_LayoutS_S_F.cshtml.rz.scp.css
+D:\Ak\CK\obj\Release\net8.0\scopedcss\Views\Shared\_Layout0.cshtml.rz.scp.css

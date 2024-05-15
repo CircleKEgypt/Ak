@@ -69,68 +69,123 @@ namespace CK.Controllers
                 // If neither condition is met, display all stores
                 query = db2.Storeusers;
             }
-                ViewBag.VBStore = query
+            ViewBag.VBStore = query
+            .GroupBy(m => m.Name)
+            .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })
+            .OrderBy(m => m.Name)
+            .ToList();
+            return View();
+        }
+        [HttpGet]
+        public IActionResult TenderFromBranch()
+        {
+            DataCenterContext db = new DataCenterContext();
+            CkproUsersContext db2 = new CkproUsersContext();
+            CkhelperdbContext db3 = new CkhelperdbContext();
+            DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+            db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+            IQueryable<RptSale> RptSales = db.RptSales;
+            IQueryable<RptSalesAxt> RptSalesAxts = db.RptSalesAxts;
+            IQueryable<RptSales2> RptSales2s = db4.RptSales2s;
+            IQueryable<RptSalesAll> RptSalesAlls = db.RptSalesAlls;
+            //Store List Text=StoreName , Value = StoreId
+            var username = HttpContext.Session.GetString("Username");
+            ViewBag.Username = username;
+            bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
+            bool isUsername = db2.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
+
+            IQueryable<Storeuser> query;
+            if (isDmanager || isUsername)
+            {
+                // If the username matches either the Dmanager or the Username, filter the stores accordingly
+                query = db2.Storeusers
+                    .Where(s => s.Dmanager == username || s.Username == username);
+            }
+            else
+            {
+                // If neither condition is met, display all stores
+                query = db2.Storeusers;
+            }
+            ViewBag.VBStore = query
+    .GroupBy(m => m.Name)
+    .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })
+    .OrderBy(m => m.Name)
+    .ToList();
+            return View();
+        }
+        [HttpPost]
+        public IActionResult TenderFromBranch(SalesParameters Parobj)
+        {
+            DataCenterContext db = new DataCenterContext();
+            CkproUsersContext db2 = new CkproUsersContext();
+            CkhelperdbContext db3 = new CkhelperdbContext();
+            DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+            db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+            db3.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+            db4.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+            var username = HttpContext.Session.GetString("Username");
+            ViewBag.Username = username;
+
+            ViewBag.VBStore = db2.Storeusers
+                    .Where(s => s.Dmanager == username || s.Username == username)
                 .GroupBy(m => m.Name)
-                .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })
+                .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })//group.First().StoreIdD + ":" +
                 .OrderBy(m => m.Name)
                 .ToList();
-           return View();
-        }
-        public bool IsBase64String(string base64)
-        {
-            Span<byte> buffer = new Span<byte>(new byte[base64.Length]);
-            return Convert.TryFromBase64String(base64, buffer, out _);
-        }
-        public string decrypt(string cipherText)
-        {
-            if (!IsBase64String(cipherText))
-            {
-                // Handle the error, e.g., log it, return a default value, or throw an exception
-                return "Invalid encrypted password format";
-            }
+            string[] storeVal = Parobj.Store.Split(':');
+            // Dynamic GroupBy based on selected values
+            IQueryable<dynamic> reportData1;
+            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
 
-            string EncryptionKey = "MAKV2SPBNI99212";
-            byte[] cipherBytes = Convert.FromBase64String(cipherText);
-            using (Aes encryptor = Aes.Create())
+            // Step 2: Format the connection string dynamically
+            //string connectionString = FormatConnectionString(serverIp);
+            // Call the ExportToExcel method
+            Parobj.exportAfterClick = true;
+            if (Parobj.Vbatch)
             {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
-                encryptor.Key = pdb.GetBytes(32);
-                encryptor.IV = pdb.GetBytes(16);
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
-                    {
-                        cs.Write(cipherBytes, 0, cipherBytes.Length);
-                        cs.Close();
-                    }
-                    cipherText = Encoding.Unicode.GetString(ms.ToArray());
-                }
+                Parobj.TMT = true;
+                Parobj.Vbatch = true;
             }
-            return cipherText;
-        }
-        public async Task<IActionResult> indexa()
-        {
-            using (var db2 = new CkproUsersContext())
+            else
             {
-                var storeUsers = await db2.RptUsers2s.ToListAsync();
-
-                // Decrypt each user's password
-                foreach (var user in storeUsers)
-                {
-                    user.DecryptedPassword = decrypt(user.Password); // Assuming 'decrypt' is your decryption method
-                }
-
-                return View(storeUsers);
+                Parobj.VPaidtype = true;
+                Parobj.VTotalSales = true;
+                Parobj.RMS = true;
+                Parobj.TMT = true;
             }
-        }
-        public async Task<IActionResult> index2()
-        {
-            using (var db2 = new DataCenterContext())
+            if (Parobj.Vbatch)
             {
-                var storeUsers = await db2.RptSales.ToListAsync();
-
-                return View(storeUsers);
+                return ExportToExcel(connectionString1, Parobj);
             }
+            else if (Parobj.RMS || Parobj.TMT)
+            {
+                return ExportToExcel(connectionString, Parobj);
+            }
+            else if (Parobj.DBbefore)
+            {
+                return ExportToExcel(connectionString2, Parobj);
+            }
+            // if Not RMS or TMT
+            else
+            {
+                return View();
+            }
+            ViewBag.Data = reportData1;
+            //  }
+            //TempData["Al"] = "تم الحفظ بفضل الله";
+            //var reportData1 = ViewBag.Data as IEnumerable<dynamic>;
+            //if (Parobj.exportAfterClick == false)
+            //{
+            //    return View();
+            //}
+
+            //else
+            //{
+            //    // return View();
+            //    return ExportReportData(reportData1, Parobj);
+            //}
         }
         public IActionResult ExportToExcel(string connectionString, SalesParameters Parobj)
         {
@@ -172,26 +227,27 @@ namespace CK.Controllers
             string fromWhereClause = null;
             DateTime startDateTime = Convert.ToDateTime(Parobj.startDate, new CultureInfo("en-GB"));
             DateTime endDateTime = Convert.ToDateTime(Parobj.endDate, new CultureInfo("en-GB"));
+
             string[] storeVal = Parobj.Store.Split(':');
             if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
             {
                 fromWhereClause = "FROM RptTender WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
             }
-            else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
+            else if (Parobj.RMS == false && Parobj.TMT ||Parobj.Vbatch|| (storeVal.Length > 1 && storeVal[1] == "Dy"))
             {
                 if (Parobj.Vbatch)
                 {
-                    fromWhereClause = "FROM RptTenderbybatch WHERE DATEADD(hour, 3, Startdate) >= @fromDate AND DATEADD(hour, -5, Closeddate) <= DATEADD(day, 1,  @toDate) ";
+                    fromWhereClause = "FROM RptAXTenderbybatch WHERE DATEADD(hour, 3, Startdate) >= @fromDate AND DATEADD(hour, -5, Closeddate) <= DATEADD(day, 1,  @toDate) ";
                 }
                 else
                 {
-                    fromWhereClause = "FROM RptTender where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause = "FROM RptAXTender where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
-                //fromWhereClause ="from (Select SalesD.TRANSACTIONID TransactionNumber,SalesH.STORE StoreID,SalesD.COSTAMOUNT Cost--,Store.Name StoreName,SalesD.ITEMID ItemLookupCode,-TAXAMOUNT Tax,Day(SalesH.TRANSDATE) ByDay,Month(SalesH.TRANSDATE) ByMonth,Year(SalesH.TRANSDATE)ByYear,SalesH.TRANSDATE TransTime,SalesH.TRANSDATE As TransDate,-SalesD.Qty Qty,-(SalesD.COSTAMOUNT*SalesD.Qty)TotalCostQty,SalesD.Price Price,-(SalesD.NETAMOUNTINCLTAX) TotalSales,-(SalesD.NETAMOUNTINCLTAX) TotalSalesTax, -(SalesD.NETAMOUNT) TotalSalesWithoutTax,Case when SalesH.STORE='143' then 'Sub-Franchise' else 'TMT' end As StoreFranchise ,INV.[Primaryvendorid] SupplierName, INV.[Primaryvendorid] SupplierCode ,It.[NAME] ItemName from  RetailChannelDatabase.ax.RetailTransactiontable SalesH INNER JOIN RetailChannelDatabase.ax.RETAILTRANSACTIONSALESTRANS SalesD ON SalesH.TRANSACTIONID = SalesD.TRANSACTIONID INNER JOIN  RetailChannelDatabase.ax.[Inventtable] as INV on SalesD.ITEMID = INV.ITEMID inner JOIN  RetailChannelDatabase.ax.[Ecoresproducttranslation] as It on INV.PRODUCT = It.PRODUCT   where SalesH.ENTRYSTATUS!=1  and SalesH.TYPE=2 AND INV.[DATAAREAID] = 'tmt' )s";            }
             }
               else
             {
-                fromWhereClause = "from RptTenderall WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+               
+                    fromWhereClause = "from RptTenderall WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
             }
             string MessageBox = string.Empty;
             bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
@@ -527,47 +583,6 @@ namespace CK.Controllers
                 }
             }
         }
-        static void Main(string[] args)
-        {
-            // Step 1: Retrieve the server IP from the database
-            string serverIp = GetServerIpFromDatabase();
-
-            // Step 2: Format the connection string dynamically
-            string connectionString = FormatConnectionString(serverIp);
-
-            // Use the connection string to connect to the database
-            // For demonstration, let's just print the connection string
-            Console.WriteLine(connectionString);
-        }
-        static string GetServerIpFromDatabase()
-        {
-            string serverIp = string.Empty;
-            string connectionString = "Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=CkproUsers;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "SELECT TOP 1 server FROM Storeuser where Server='192.168.104.222/New'"; // Assuming you want the first server IP found
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    object result = command.ExecuteScalar();
-                    if (result != null)
-                    {
-                        serverIp = result.ToString();
-                    }
-                }
-            }
-
-            return serverIp;
-        }
-
-        static string FormatConnectionString(string serverIp)
-        {
-            // Assuming the rest of the connection string remains the same except for the server IP
-            string connectionStringFormat = "Server={0};User ID=sa;Password=P@ssw0rd;Database=RetailChannelDatabase;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
-            string connectionString = string.Format(connectionStringFormat, serverIp);
-            return connectionString;
-        }
         [HttpPost]
         public IActionResult Index(SalesParameters Parobj)
         {
@@ -590,10 +605,9 @@ namespace CK.Controllers
              // Dynamic GroupBy based on selected values
             IQueryable<dynamic> reportData1;
             string[] storeVal = Parobj.Store.Split(':');
-            string connectionString1 = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
-            string serverIp = GetServerIpFromDatabase();
 
             // Step 2: Format the connection string dynamically
             //string connectionString = FormatConnectionString(serverIp);

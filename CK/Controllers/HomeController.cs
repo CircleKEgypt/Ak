@@ -36,6 +36,71 @@ namespace CK.Controllers
         {
             _logger = logger;
         }
+        [HttpGet]
+        public IActionResult ATransferSol1(string transferId)
+        {
+            DataCenterContext db = new DataCenterContext();
+            IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
+            var username = HttpContext.Session.GetString("Username");
+            var Role = HttpContext.Session.GetString("Role");
+            ViewBag.Username = username;
+            ViewBag.Role = Role;
+            if (!string.IsNullOrEmpty(transferId))
+            {
+                reportData1 = db.Rs
+                    .Where(d => d.Transaction == transferId)
+                    .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
+                    .Select(g => new CK.Models.R
+                    {
+                        FromTable = g.Key.FromTable,
+                        Quantity = g.Sum(d => d.Quantity),
+                        Item = g.Key.Item,
+                        Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
+                        Day = g.Key.Day,
+                        Transaction = g.Key.Transaction,
+                        ToTable = g.Key.ToTable,
+                        Status = g.Key.Status
+                    });
+
+            }
+
+            // Convert IQueryable to List before passing it to the view
+            var reportDataList = reportData1.ToList();
+
+            return View(reportDataList);
+        }
+        public IActionResult ATransferSol(string transferId)
+        {
+            DataCenterContext db = new DataCenterContext();
+            IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
+            var username = HttpContext.Session.GetString("Username");
+            var Role = HttpContext.Session.GetString("Role");
+            ViewBag.Username = username;
+            ViewBag.Role = Role;
+            if (!string.IsNullOrEmpty(transferId))
+            {
+                reportData1 = db.Rs
+                    .Where(d => d.Transaction == transferId)
+                    .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
+                    .Select(g => new CK.Models.R
+                    {
+                        FromTable = g.Key.FromTable,
+                        Quantity = g.Sum(d => d.Quantity),
+                        Item = g.Key.Item,
+                        Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
+                        Day = g.Key.Day,
+                        Transaction = g.Key.Transaction,
+                        ToTable = g.Key.ToTable,
+                        Status = g.Key.Status
+                    });
+
+            }
+
+            // Convert IQueryable to List before passing it to the view
+            var reportDataList = reportData1.ToList();
+
+            return View(reportDataList);
+        }
         public IActionResult Home()
         {
             var username = HttpContext.Session.GetString("Username");
@@ -50,8 +115,9 @@ namespace CK.Controllers
         {
             DataCenterContext db = new DataCenterContext();
             CkproUsersContext db2 = new CkproUsersContext();
-            CkhelperdbContext db3 = new CkhelperdbContext();
-            DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+			CkhelperdbContext db3 = new CkhelperdbContext();
+			AxdbContext Axdb = new AxdbContext();
+			DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
             db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
             //Store List Text=StoreName , Value = StoreId
             var username = HttpContext.Session.GetString("Username");
@@ -64,14 +130,15 @@ namespace CK.Controllers
                 return RedirectToAction("Store", "Home");
             }
             bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
+            bool isFmanager = db2.RptUsers.Any(s => s.Fmanager == username);
             bool isUsername = db2.RptUsers.Any(s => s.Username == username &&( s.Storenumber != null ||s.Storenumber!=" "));
            
             IQueryable<Storeuser> query;
-            if (isDmanager || isUsername)
+            if (isDmanager || isUsername || isFmanager)
             {
                 // If the username matches either the Dmanager or the Username, filter the stores accordingly
                 query = db2.Storeusers
-                    .Where(s => s.Dmanager == username || s.Username == username);
+                    .Where(s => s.Dmanager == username || s.Username == username || s.Fmanager == username);
             }
             else
             {
@@ -83,7 +150,7 @@ namespace CK.Controllers
     .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })
     .OrderBy(m => m.Name)
     .ToList();
-            ViewBag.VBDepartment = db.Departments
+            ViewBag.VBDepartment = Axdb.Ecorescategories
                                                  .GroupBy(m => m.Name)
                                                  .Select(group => new { Code = group.First().Code, Name = group.Key })
                                                  .OrderBy(m => m.Name)
@@ -207,7 +274,7 @@ namespace CK.Controllers
             // Dynamic GroupBy based on selected values
             IQueryable<dynamic> reportData1;
             string[] storeVal = Parobj.Store.Split(':');
-            string connectionString1 = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string serverIp = GetServerIpFromDatabase();
@@ -251,18 +318,6 @@ namespace CK.Controllers
                 // return View();
                 return ExportReportData(reportData1, Parobj);
             }
-            //TempData["Al"] = "Êã ÇáÍÝÙ ÈÝÖá Çááå";
-
-
-            //Parobj.exportAfterClick = true;
-            //if (Parobj.exportAfterClick == false)
-            //{
-            //    return View();
-            //}
-            //else if (Parobj.TMT)
-            //{
-            //    return ExportToExcelAx(connectionString, Parobj);
-            //}
 
         }
 
@@ -396,7 +451,24 @@ namespace CK.Controllers
                 }
                 else
                 {
-                    fromWhereClause = "FROM RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause = @"FROM
+(select 
+dp.code DpID,dp.ID GroupId, dp.Name DpName,
+Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
+T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
+T.TransactionTime TransTime,
+Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
+convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
+(T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
+,Convert (varchar(20),item.SupplierId )SupplierCode1
+--,sub.Code SupplierId ,sub.SupplierName SupplierName,sub.Code SupplierCode
+,s.DManager,s.Username,s.FManager
+from TransactionEntry T 
+left join Item on Item.ID=T.ItemID and T.StoreID=Item.storeid --and item.Quantity!=0
+left join department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
+left join Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
+left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID ))RptSales
+ WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
             }
             else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
@@ -431,12 +503,13 @@ namespace CK.Controllers
             {
                 fromWhereClause += "AND SupplierCode = @Supplier ";
             }
+            bool isFmanager = db2.RptUsers.Any(s => s.Fmanager == username);
             bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username );
             bool isUsername = db2.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
             IQueryable<Storeuser> query;
-            if (isDmanager || isUsername)
+            if (isDmanager || isUsername || isFmanager)
             {
-                fromWhereClause += "AND (Dmanager='" + username + "' or username ='" + username + "') ";
+                fromWhereClause += "AND (Dmanager='" + username + "' or username ='" + username + "' or Fmanager ='" + username +"') ";
 
             }
             if (Parobj.Store != "0")
@@ -1009,7 +1082,7 @@ namespace CK.Controllers
             // Dynamic GroupBy based on selected values
             IQueryable<dynamic> reportData1;
             string[] storeVal = Parobj.Store.Split(':');
-            string connectionString1 = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string serverIp = GetServerIpFromDatabase();
