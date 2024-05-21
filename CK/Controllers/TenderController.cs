@@ -25,11 +25,17 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using DocumentFormat.OpenXml.InkML;
 using System.Security.Cryptography;
+using Microsoft.IO;
 namespace CK.Controllers
 {
    [Authorize]
     public class TenderController : Controller
     {
+        AxdbContext Axdb = new AxdbContext();
+        DataCenterContext db = new DataCenterContext();
+        CkproUsersContext db2 = new CkproUsersContext();
+        CkhelperdbContext db3 = new CkhelperdbContext();
+        DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
         private readonly ILogger<TenderController> _logger;
 
         public TenderController(ILogger<TenderController> logger)
@@ -135,7 +141,7 @@ namespace CK.Controllers
             string[] storeVal = Parobj.Store.Split(':');
             // Dynamic GroupBy based on selected values
             IQueryable<dynamic> reportData1;
-            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionStringAXDB = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
 
@@ -155,13 +161,13 @@ namespace CK.Controllers
                 Parobj.RMS = true;
                 Parobj.TMT = true;
             }
-            if (Parobj.Vbatch)
-            {
-                return ExportToExcel(connectionString1, Parobj);
-            }
-            else if (Parobj.RMS || Parobj.TMT)
+            if (Parobj.RMS)
             {
                 return ExportToExcel(connectionString, Parobj);
+            }
+            else if (Parobj.TMT)
+            {
+                return ExportToExcel(connectionStringAXDB, Parobj);
             }
             else if (Parobj.DBbefore)
             {
@@ -229,25 +235,67 @@ namespace CK.Controllers
             DateTime endDateTime = Convert.ToDateTime(Parobj.endDate, new CultureInfo("en-GB"));
 
             string[] storeVal = Parobj.Store.Split(':');
-            if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
+            if (Parobj.RMS &&!Parobj.Vbatch&& Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
             {
-                fromWhereClause = "FROM RptTender WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                fromWhereClause = @"FROM 
+                                        (select distinct
+                                        Tend.StoreId,
+                                        S.Name StoreName,
+                                        Tend.Description Paidtype,
+                                        Tend.amount TotalSales,
+                                          Tend.TransactionNumber,
+                                         Cast (Trans.TransactionTime as date)Transdate
+                                         ,FORMAT(Trans.TransactionTime, 'HH:mm') AS DinTime,s.Username,DManager,FManager
+                                        from TenderEntry Tend
+                                        inner join TransactionEntry Trans on Trans.TransactionNumber= Tend.TransactionNumber and Trans.StoreID=Tend.StoreID
+                                        left join CkproUsers.dbo.Storeuser S on S.RMSstoNumber =Convert(varchar(20),Tend.StoreID)
+                                        )RptTender WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
             }
             else if (Parobj.RMS == false && Parobj.TMT ||Parobj.Vbatch|| (storeVal.Length > 1 && storeVal[1] == "Dy"))
             {
                 if (Parobj.Vbatch)
                 {
-                    fromWhereClause = "FROM RptAXTenderbybatch WHERE DATEADD(hour, 3, Startdate) >= @fromDate AND DATEADD(hour, -5, Closeddate) <= DATEADD(day, 1,  @toDate) ";
+                    fromWhereClause = @"FROM 
+(select Rt.Terminalid,
+Rt.STOREID StoreId,
+Rt.Salestotal,
+   FORMAT(DATEADD(hour, 2, Rt.Closedatetimeutc), 'yyyy-MM-dd HH:mm') AS Closeddate,
+    FORMAT(DATEADD(hour, 2, Rt.Startdatetimeutc), 'yyyy-MM-dd HH:mm') AS Startdate,
+Rt.Batchid,
+ Ttable.Name Paidtype,
+ Rline.Transamount TotalSales,s.Username,DManager,FManager
+ from AXDB.dbo.Retailposbatchtable Rt
+ inner join AXDB.dbo.Retailposbatchline Rline on Rline.BATCHID=Rt.BATCHID and Rt.TERMINALID=Rline.Batchterminalid
+ inner join AXDB.dbo.Retailtendertypetable Ttable on Ttable.Tendertypeid=Rline.TENDERTYPEID
+left join (Select storenumber,Username,DManager,FManager from [192.168.1.156].CkproUsers.dbo.Storeuser) S on s.storenumber=rt.STOREID
+   where  Rline.Transamount != '0' and Ttable.Tendertypeid != '4')RptAXTenderbybatch 
+WHERE DATEADD(hour, 3, Startdate) >= @fromDate AND DATEADD(hour, -5, Closeddate) <= DATEADD(day, 1,  @toDate) ";
                 }
                 else
                 {
-                    fromWhereClause = "FROM RptAXTender where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause = @"FROM 
+                (select 
+                RS.Store StoreId,
+                S.Name StoreName,
+                RH.Name Paidtype
+                ,RS.Amounttendered TotalSales
+                ,RS.Transactionid TransactionNumber
+                ,cast (RS.Transdate as date)Transdate
+                ,FORMAT(DATEADD(SECOND, RS.Transtime, 0), 'HH:mm:ss') AS DinTime,s.Username,DManager,FManager
+                 from AXDB.dbo.Retailtransactionpaymenttrans RS
+                inner join AXDB.dbo.Retailtendertypetable RH on RH.Tendertypeid=RS.TENDERTYPE
+                left join (Select Name,storenumber,Username,DManager,FManager from [192.168.1.156].CkproUsers.dbo.Storeuser) S on s.storenumber=RS.Store
+                where  Rs.Ispaymentcaptured = 1)RptAXTender where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
             }
-              else
+              else if (Parobj.RMS == false && Parobj.TMT)
             {
                
                     fromWhereClause = "from RptTenderall WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+            }
+            else
+            {
+                return View();
             }
             string MessageBox = string.Empty;
             bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
@@ -605,7 +653,7 @@ namespace CK.Controllers
              // Dynamic GroupBy based on selected values
             IQueryable<dynamic> reportData1;
             string[] storeVal = Parobj.Store.Split(':');
-            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+            string connectionStringAXDB = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
             string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
 
@@ -623,7 +671,7 @@ namespace CK.Controllers
             }
             else if (Parobj.TMT)
             {
-                return ExportToExcel(connectionString1, Parobj);
+                return ExportToExcel(connectionStringAXDB, Parobj);
             }
             else if (Parobj.DBbefore)
             {

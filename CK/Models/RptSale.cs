@@ -33,7 +33,7 @@ public partial class RptSale
 
     public int? ByYear { get; set; }
 
-    public DateOnly? TransDate { get; set; }
+    public DateTime? TransDate { get; set; }
 
     public double Qty { get; set; }
 

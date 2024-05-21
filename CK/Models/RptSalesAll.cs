@@ -23,7 +23,7 @@ public partial class RptSalesAll
 
     public DateTime? TransTime { get; set; }
 
-    public DateOnly? TransDate { get; set; }
+    public DateTime? TransDate { get; set; }
 
     public double? Qty { get; set; }
 

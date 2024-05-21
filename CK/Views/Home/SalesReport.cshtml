@@ -1,0 +1,116 @@
+﻿ @addTagHelper*, Microsoft.AspNetCore.Mvc.TagHelpers
+@model CK.Models.Store
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" media="screen" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.css" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    <script type="text/javascript" src="/js/site.js"></script>
+    <link type="text/css" rel="stylesheet" href="~/css/test.css" />
+</head>
+<body id="top" class="top">
+    <a asp-controller="Home" asp-action="HomeStore" class="btn btn-primary">Home</a>
+
+    <!-- start preloader -->
+    <div class="preloader">
+        <div class="sk-spinner sk-spinner-wave">
+            <div class="sk-rect1"></div>
+            <div class="sk-rect2"></div>
+            <div class="sk-rect3"></div>
+            <div class="sk-rect4"></div>
+            <div class="sk-rect5"></div>
+        </div>
+    </div>
+    <div class="container">
+
+        @*         <img src="~/images/Circle_K,_1255_Academy_Park_Lp,_Colorado_Springs,_CO.jpg" width="1000px"/>
+        *@    <!-- end preloader -->
+        <h3>Stores Data</h3>
+        <a class="nav-link" style="color:black" asp-controller="Reports" asp-action="SalesReport">Details</a>
+        <a class="nav-link" style="color:black" asp-controller="Home" asp-action="Index">Home</a>
+        <form asp-controller="Home" asp-action="ExportToExcel" method="get">
+            @* <select name="Department" asp-items="@(new SelectList(ViewBag.VBDepartment,"Code","Name"))">
+                <option value="0">All Department</option>
+            </select>
+            <br /> *@
+            <input type="checkbox" name="exportAfterClick" value="true" />Export
+
+            <input type="submit" value="Display Report" id="exportButton" class="btn btn-primary" />
+            @*             <input type="submit" value="Display Report" class="btn btn-primary" />
+            *@
+            <div id="stopwatch"></div>
+
+            <div class="preloader">
+                <div class="sk-spinner sk-spinner-wave">
+                    <div class="sk-rect1"></div>
+                    <div class="sk-rect2"></div>
+                    <div class="sk-rect3"></div>
+                    <div class="sk-rect4"></div>
+                    <div class="sk-rect5"></div>
+                </div>
+            </div>
+            <hr /> 
+            <div id="salesReportTableWrapper">
+                @if (ViewBag.Data != null)
+                {
+                    <table id="salesReportTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>StoreName</th>
+                                <th>Department Name</th>
+                                <th>ItemLookupCode</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dr in ViewBag.Data)
+                            {
+                                <tr>
+                                    <td>@dr.StoreName</td>
+                                    <td>@dr.DepName</td>
+                                    <td>@dr.ItemLookupCode</td>
+                                    <td>@dr.Total</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+        </form>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $('#salesReportTable').DataTable({
+                dom: 'Bfrtip', // Place the buttons at the top of the table
+                buttons: [
+                    'pdfHtml5' // Enable PDF export
+                ],
+                // Other DataTables options go here
+            });
+        });
+    </script>
+    <script src="/Scripts/bootstrap.min.js"></script>
+    <script src="/Scripts/jquery.singlePageNav.min.js"></script>
+    <script src="/Scripts/typed.js"></script>
+    <script src="/Scripts/wow.min.js"></script>
+    <script src="/Scripts/custom.js"></script>
+    <script src="/Scripts/main.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
+</body>
+</html>

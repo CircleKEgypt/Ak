@@ -2,10 +2,6 @@
 @{
         Layout = null;
 }
-<h2>Display Stores</h2>
-<a asp-controller="Branches" asp-action="CreateStore" class="btn btn-primary">Create Store</a>
-<a asp-controller="Home" asp-action="Home" class="btn btn-primary">Home</a>
-
 <!Doctype html>
 <html>
 <head>
@@ -60,11 +56,18 @@
         .dt-search {
             float: right;
         }
-    </style>
 
+        .Title {
+            background-color: #b50101;
+            font-family: emoji;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-
+    <button class="btn btn-primary Title">Stores</button>
+    <a asp-controller="Branches" asp-action="CreateStore" class="btn btn-primary">Create Store</a>
+    <a asp-controller="Home" asp-action="Home" class="btn btn-primary">Home</a>
     <table id="example" class="table">
         <thead>
             <tr>
@@ -146,7 +149,7 @@
                 lengthChange: true, // Enable the length change input control
                 dom: 'Blfrtip', // Define the placement of the buttons
                 buttons: [
-                    'pdf' // Specify the buttons
+                    'pdf', 'excel' // Specify the buttons
                 ]
             });
 

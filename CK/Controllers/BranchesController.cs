@@ -8,10 +8,17 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 using System.Text;
 using DocumentFormat.OpenXml.Spreadsheet;
+using CK.Model;
+using DocumentFormat.OpenXml.Wordprocessing;
 namespace CK.Controllers
 {
     public class BranchesController : Controller
     {
+        AxdbContext Axdb = new AxdbContext();
+        DataCenterContext db = new DataCenterContext();
+        CkproUsersContext db2 = new CkproUsersContext();
+        CkhelperdbContext db3 = new CkhelperdbContext();
+        DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
         private readonly ILogger<BranchesController> _logger;
         private readonly CkproUsersContext _dbContext;
         private static readonly List<RptUser3> Users = new List<RptUser3>();
@@ -123,7 +130,16 @@ namespace CK.Controllers
             ViewBag.Username = username;
             ViewBag.Role = Role;
             var stores = await _dbContext.Storeusers.FindAsync(id);
-            stores.Password = Decrypt(stores.Password);
+            //if Password Encrypted Algorithm is not 64 i will display this password as it -Ahmed Hosny
+            try
+            {
+                stores.Password = Decrypt(stores.Password);
+            }
+            catch (Exception ex)
+            {
+                stores.Password = stores.Password;
+            }
+            //stores.Password = Decrypt(stores.Password);
             return View(stores);
         }
 
@@ -132,23 +148,24 @@ namespace CK.Controllers
         public async Task<IActionResult> EditStore(int id, [Bind("Inventlocation,Storenumber,Username,Password,Name,Server,RmsstoNumber,Id,Email,Dbase,PriceCategory,Franchise,Company,Zkip,StartDate,ArabicN,District,Dmanager,Fmanager")] Storeuser store)
         {
 
-            //store.Inventlocation ??= "Null";
-            //store.Storenumber ??= "Null";
-            //store.RmsstoNumber ??= "Null";
-            //store.ArabicN ??= "Null";
-            //store.Company ??= "Null";
-            //store.StartDate ??= "Null";
-            //store.Dbase ??= "Null";
-            //store.District ??= "Null";
-            //store.Dmanager ??= "UnKnown";
-            //store.Fmanager ??= "UnKnown";
-            //store.Email ??= "Null";
-            //store.Franchise ??= "Null";
-            //store.Name ??= "Null";
-            //store.PriceCategory ??= "Null";
-            //store.Server ??= "Null";
-            //store.Zkip ??= "Null";
-            //store.Username ??= "Null";
+            store.Inventlocation ??= "Null";
+            store.Storenumber ??= "Null";
+            store.RmsstoNumber ??= "Null";
+            store.ArabicN ??= "Null";
+            store.Company ??= "Null";
+            store.StartDate ??= "Null";
+            store.Dbase ??= "Null";
+            store.DecryptedPassword ??= "Null";
+            store.District ??= "Null";
+            store.Dmanager ??= "UnKnown";
+            store.Fmanager ??= "UnKnown";
+            store.Email ??= "Null";
+            store.Franchise ??= "Null";
+            store.Name ??= "Null";
+            store.PriceCategory ??= "Null";
+            store.Server ??= "Null";
+            store.Zkip ??= "Null";
+            store.Username ??= "Null";
             store.Password = encrypt(store.Password);
             _dbContext.Update(store);
             await _dbContext.SaveChangesAsync();

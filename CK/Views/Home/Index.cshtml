@@ -73,7 +73,7 @@
                         </div>
                     </div>
                 </div>
-                <form id="exportForm" asp-controller="Home" asp-action="Index" method="post">
+                 <form id="exportForm" asp-controller="Home" asp-action="Index" method="post">
                     <section class="content">
                         <div class="container-fluid">
                             <div class="row">
@@ -287,6 +287,28 @@
                         </div>
                     </section>
                 </form>
+            @* <div id="salesReportTableWrapper">
+                @if (ViewBag.Data != null)
+                {
+                    <table id="salesReportTable" class="table">
+                        <thead>
+                            <tr>
+                                <th>StoreName</th>
+                                <th>TotalSales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dr in ViewBag.Data)
+                            {
+                                <tr>
+                                    <td>@dr.StoreName</td>
+                                    <td>@dr.TotalSales</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div> *@
             </div>
         </div>
     <script src="/js/main.js"></script>

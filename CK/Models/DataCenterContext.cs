@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CK.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CK.Models;
@@ -20,7 +19,7 @@ public partial class DataCenterContext : DbContext
 
     public virtual DbSet<Item> Items { get; set; }
 
-    public virtual DbSet<R> Rs { get; set; }
+    public virtual DbSet<RptAxstore> RptAxstores { get; set; }
 
     public virtual DbSet<RptSale> RptSales { get; set; }
 
@@ -28,12 +27,15 @@ public partial class DataCenterContext : DbContext
 
     public virtual DbSet<RptSalesAxt> RptSalesAxts { get; set; }
 
+    public virtual DbSet<RptStore> RptStores { get; set; }
+
+    public virtual DbSet<RptStoreAll> RptStoreAlls { get; set; }
+
     public virtual DbSet<Store> Stores { get; set; }
 
     public virtual DbSet<Supplier> Suppliers { get; set; }
 
     public virtual DbSet<TransactionEntry> TransactionEntries { get; set; }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=150;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
@@ -177,33 +179,54 @@ public partial class DataCenterContext : DbContext
                 .HasDefaultValue("");
         });
 
-        modelBuilder.Entity<R>(entity =>
+        modelBuilder.Entity<RptAxstore>(entity =>
         {
             entity
                 .HasNoKey()
-                .ToView("RS");
+                .ToView("RptAXStore");
 
-            entity.Property(e => e.Barcode)
+            entity.Property(e => e.Cost).HasColumnType("numeric(32, 6)");
+            entity.Property(e => e.Dmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("DManager");
+            entity.Property(e => e.DpId)
                 .HasMaxLength(20)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Day)
-                .HasMaxLength(30)
-                .IsUnicode(false);
-            entity.Property(e => e.FromTable)
-                .HasMaxLength(10)
+            entity.Property(e => e.DpName)
+                .HasMaxLength(254)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("dpName");
+            entity.Property(e => e.Fmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("FManager");
+            entity.Property(e => e.ItemLookupCode)
+                .HasMaxLength(20)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Item)
+            entity.Property(e => e.ItemName)
                 .HasMaxLength(60)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Quantity).HasColumnType("numeric(32, 6)");
-            entity.Property(e => e.Status)
-                .HasMaxLength(8)
-                .IsUnicode(false);
-            entity.Property(e => e.ToTable)
+            entity.Property(e => e.Modified).HasColumnType("datetime");
+            entity.Property(e => e.Qty).HasColumnType("numeric(32, 6)");
+            entity.Property(e => e.StoreFranchise)
+                .HasMaxLength(50)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreId)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreName)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreNameInDy)
                 .HasMaxLength(10)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Transaction)
+            entity.Property(e => e.SupplierCode)
                 .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.SupplierName).HasMaxLength(30);
+            entity.Property(e => e.Username)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
         });
 
@@ -311,6 +334,85 @@ public partial class DataCenterContext : DbContext
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.SupplierName)
                 .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+        });
+
+        modelBuilder.Entity<RptStore>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("RptStore");
+
+            entity.Property(e => e.Cost).HasColumnType("money");
+            entity.Property(e => e.Dmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("DManager");
+            entity.Property(e => e.DpId).HasMaxLength(17);
+            entity.Property(e => e.DpName)
+                .HasMaxLength(30)
+                .HasColumnName("dpName");
+            entity.Property(e => e.Fmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("FManager");
+            entity.Property(e => e.ItemLookupCode).HasMaxLength(25);
+            entity.Property(e => e.ItemName).HasMaxLength(30);
+            entity.Property(e => e.StoreFranchise).HasMaxLength(50);
+            entity.Property(e => e.StoreId).HasColumnName("StoreID");
+            entity.Property(e => e.StoreName)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.SupplierCode).HasMaxLength(17);
+            entity.Property(e => e.SupplierName).HasMaxLength(30);
+        });
+
+        modelBuilder.Entity<RptStoreAll>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("RptStoreAll");
+
+            entity.Property(e => e.Cost).HasColumnType("numeric(32, 6)");
+            entity.Property(e => e.Dmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("DManager");
+            entity.Property(e => e.DpId)
+                .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.DpName)
+                .HasMaxLength(254)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("dpName");
+            entity.Property(e => e.Fmanager)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
+                .HasColumnName("FManager");
+            entity.Property(e => e.ItemLookupCode)
+                .HasMaxLength(25)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.ItemName)
+                .HasMaxLength(60)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreFranchise)
+                .HasMaxLength(50)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreId).HasColumnName("StoreID");
+            entity.Property(e => e.StoreIdD)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.StoreName)
+                .HasMaxLength(255)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.SupplierCode)
+                .HasMaxLength(20)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.SupplierName)
+                .HasMaxLength(30)
+                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Username)
+                .HasMaxLength(255)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
         });
 

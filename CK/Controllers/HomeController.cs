@@ -26,81 +26,230 @@ using System.Data;
 using DocumentFormat.OpenXml.InkML;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using Microsoft.AspNetCore.Mvc.Rendering;
 namespace CK.Controllers
 {
     [Authorize]
     public class HomeController : Controller
     {
+        //private readonly DataCenterContext _dataCenterContext;
+        //    private readonly CkproUsersContext _ckproUsersContext;
+        //    public HomeController(DataCenterContext dataCenterContext, CkproUsersContext ckproUsersContext)
+        //    {
+        //        _dataCenterContext = dataCenterContext;
+        //        _ckproUsersContext = ckproUsersContext;
+        //    }
         private readonly ILogger<HomeController> _logger;
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
         }
+        public string GetSalesReportQuery(DateTime? startDate, DateTime? endDate, int? Store, int? Department)
+        {
+            StringBuilder sqlQuery = new StringBuilder("SELECT * FROM RptSales");
+
+            if (startDate.HasValue)
+            {
+                sqlQuery.Append($" AND TransDate >= '{startDate.Value.ToString("yyyy-MM-dd")}'");
+            }
+
+            if (endDate.HasValue)
+            {
+                sqlQuery.Append($" AND TransDate <= '{endDate.Value.ToString("yyyy-MM-dd")}'");
+            }
+
+            if (Store.HasValue)
+            {
+                sqlQuery.Append($" AND StoreId = {Store.Value}");
+            }
+
+            if (Department.HasValue)
+            {
+                sqlQuery.Append($" AND DpId = {Department.Value}");
+            }
+
+            return sqlQuery.ToString();
+        }
+        private readonly string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+
+        // private readonly string _connectionString = "YourConnectionStringHere"; // Replace with your actual connection string
+
+        private List<RptSale> ExecuteSalesReportQuery(DateTime startDate, DateTime endDate, int storeId, int departmentId)
+        {
+            List<RptSale> salesList = new List<RptSale>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString1))
+            {
+                connection.Open();
+
+                // Construct the SQL query
+                string query = $"SELECT * FROM R WHERE TransDate BETWEEN '{startDate:yyyy-MM-dd}' AND '{endDate:yyyy-MM-dd}'";
+                if (storeId > 0)
+                {
+                    query += $" AND StoreId = {storeId}";
+                }
+                if (departmentId > 0)
+                {
+                    query += $" AND DepartmentId = {departmentId}";
+                }
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            RptSale sale = new RptSale
+                            {
+                                TransDate = reader.GetDateTime(reader.GetOrdinal("TransDate")),
+                                StoreId = reader.GetInt32(reader.GetOrdinal("StoreId")),
+                                DpId = reader.GetString(reader.GetOrdinal("DepartmentId"))
+                                // Map other properties as needed
+                            };
+                            salesList.Add(sale);
+                        }
+                    }
+                }
+            }
+
+            return salesList;
+        }
+        [HttpPost]
+        public IActionResult ProcessSalesReport(DateTime startDate, DateTime endDate, int storeId, int departmentId)
+        {
+            // Call your method to execute the SQL query and get the results
+            List<RptSale> salesResults = ExecuteSalesReportQuery(startDate, endDate, storeId, departmentId);
+
+            // Pass the results to the view
+            return View(salesResults);
+        }
         [HttpGet]
-        public IActionResult ATransferSol1(string transferId)
+        public IActionResult SalesReport(string startDate, string endDate, string Store, string Department, int dis, bool exportAfterClick, string[] selectedItems)
         {
             DataCenterContext db = new DataCenterContext();
-            IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
+            CkproUsersContext Prodb = new CkproUsersContext();
+            IQueryable<CK.Models.RptStore> RptStoreData = db.RptStores;
+            db.Database.SetCommandTimeout(7800); // Set the timeout in seconds
             var username = HttpContext.Session.GetString("Username");
             var Role = HttpContext.Session.GetString("Role");
+            var ServerName = HttpContext.Session.GetString("Server");
             ViewBag.Username = username;
             ViewBag.Role = Role;
-            if (!string.IsNullOrEmpty(transferId))
+            //var serverName = _dataCenterContext.Servers.FirstOrDefault()?.ServerName ?? "DefaultServer";
+            //var dbName = _ckproUsersContext.Databases.FirstOrDefault()?.DatabaseName ?? "DefaultDB";
+            bool isFmanager = Prodb.RptUsers.Any(s => s.Fmanager == username);
+            bool isDmanager = Prodb.RptUsers.Any(s => s.Dmanager == username);
+            bool isUsername = Prodb.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
+            IQueryable<Storeuser> query;
+            if (isDmanager || isUsername || isFmanager)
             {
-                reportData1 = db.Rs
-                    .Where(d => d.Transaction == transferId)
-                    .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
-                    .Select(g => new CK.Models.R
-                    {
-                        FromTable = g.Key.FromTable,
-                        Quantity = g.Sum(d => d.Quantity),
-                        Item = g.Key.Item,
-                        Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
-                        Day = g.Key.Day,
-                        Transaction = g.Key.Transaction,
-                        ToTable = g.Key.ToTable,
-                        Status = g.Key.Status
-                    });
-
+                RptStoreData = RptStoreData.Where(s => s.StoreName == username);
+            }
+            ViewBag.VBDepartment = db.Departments.Select(m => new { m.Code, m.Name }).Distinct();
+            if (Department != null)
+            {
+                RptStoreData = RptStoreData.Where(s => s.DpId.ToString() == Department);
             }
 
-            // Convert IQueryable to List before passing it to the view
-            var reportDataList = reportData1.ToList();
-
-            return View(reportDataList);
-        }
-        public IActionResult ATransferSol(string transferId)
-        {
-            DataCenterContext db = new DataCenterContext();
-            IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
-            var username = HttpContext.Session.GetString("Username");
-            var Role = HttpContext.Session.GetString("Role");
-            ViewBag.Username = username;
-            ViewBag.Role = Role;
-            if (!string.IsNullOrEmpty(transferId))
+            if (string.IsNullOrEmpty(startDate) && string.IsNullOrEmpty(endDate) && Store is null && Department is null)
             {
-                reportData1 = db.Rs
-                    .Where(d => d.Transaction == transferId)
-                    .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
-                    .Select(g => new CK.Models.R
-                    {
-                        FromTable = g.Key.FromTable,
-                        Quantity = g.Sum(d => d.Quantity),
-                        Item = g.Key.Item,
-                        Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
-                        Day = g.Key.Day,
-                        Transaction = g.Key.Transaction,
-                        ToTable = g.Key.ToTable,
-                        Status = g.Key.Status
-                    });
+                return View();
+            }
+            //string ServerStore = (from c in _contextt.Storeuser
+            //                      where c.Name == Retail
+            //                      select c.Server).Single();
+            //string? DbStore = (from c in _contextt.Storeuser
+            //                   where c.Name == Retail
+            //                   select c.Dbase).Single();
+            string constr = string.Format("Server={0};User ID=sa;Password=P@ssw0rd;Database=RetailChannelDatabase;Connect Timeout=50;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;", ServerName);
+            ServerConnection ServerCont = new ServerConnection(constr);
+            ViewBag.StartStopwatch = true;
+            var reportData1 = RptStoreData.GroupBy(d => new { d.StoreName, d.DpName, d.Qty, d.ItemLookupCode })
+                .Select(g => new
+                {
+                    Total = g.Sum(d => d.Qty),
+                    StoreName = g.Key.StoreName,
+                    ItemLookupCode = g.Key.ItemLookupCode,
+                    DepName = g.Key.DpName
+                }).OrderByDescending(x => x.Total);
+            ViewBag.Data = reportData1;
+            if (exportAfterClick == false)
 
+            {
+                return View();
+            }
+            else
+            {
+                return View();
             }
 
-            // Convert IQueryable to List before passing it to the view
-            var reportDataList = reportData1.ToList();
-
-            return View(reportDataList);
         }
+
+        //[HttpGet]
+        //public IActionResult ATransferSol1(string transferId)
+        //{
+        //    DataCenterContext db = new DataCenterContext();
+        //    IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
+        //    var username = HttpContext.Session.GetString("Username");
+        //    var Role = HttpContext.Session.GetString("Role");
+        //    ViewBag.Username = username;
+        //    ViewBag.Role = Role;
+        //    if (!string.IsNullOrEmpty(transferId))
+        //    {
+        //        reportData1 = db.Rs
+        //            .Where(d => d.Transaction == transferId)
+        //            .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
+        //            .Select(g => new CK.Models.R
+        //            {
+        //                FromTable = g.Key.FromTable,
+        //                Quantity = g.Sum(d => d.Quantity),
+        //                Item = g.Key.Item,
+        //                Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
+        //                Day = g.Key.Day,
+        //                Transaction = g.Key.Transaction,
+        //                ToTable = g.Key.ToTable,
+        //                Status = g.Key.Status
+        //            });
+
+        //    }
+
+        //    // Convert IQueryable to List before passing it to the view
+        //    var reportDataList = reportData1.ToList();
+
+        //    return View(reportDataList);
+        //}
+        //public IActionResult ATransferSol(string transferId)
+        //{
+        //    DataCenterContext db = new DataCenterContext();
+        //    IQueryable<CK.Models.R> reportData1 = Enumerable.Empty<CK.Models.R>().AsQueryable(); // Initialize with an empty queryable
+        //    var username = HttpContext.Session.GetString("Username");
+        //    var Role = HttpContext.Session.GetString("Role");
+        //    ViewBag.Username = username;
+        //    ViewBag.Role = Role;
+        //    if (!string.IsNullOrEmpty(transferId))
+        //    {
+        //        reportData1 = db.Rs
+        //            .Where(d => d.Transaction == transferId)
+        //            .GroupBy(d => new { d.FromTable, d.ToTable, d.Item, d.Barcode, d.Day, d.Transaction, d.Status })
+        //            .Select(g => new CK.Models.R
+        //            {
+        //                FromTable = g.Key.FromTable,
+        //                Quantity = g.Sum(d => d.Quantity),
+        //                Item = g.Key.Item,
+        //                Barcode = g.Select(d => d.Barcode).FirstOrDefault(),
+        //                Day = g.Key.Day,
+        //                Transaction = g.Key.Transaction,
+        //                ToTable = g.Key.ToTable,
+        //                Status = g.Key.Status
+        //            });
+
+        //    }
+
+        //    // Convert IQueryable to List before passing it to the view
+        //    var reportDataList = reportData1.ToList();
+
+        //    return View(reportDataList);
+        //}
         public IActionResult Home()
         {
             var username = HttpContext.Session.GetString("Username");
@@ -115,9 +264,9 @@ namespace CK.Controllers
         {
             DataCenterContext db = new DataCenterContext();
             CkproUsersContext db2 = new CkproUsersContext();
-			CkhelperdbContext db3 = new CkhelperdbContext();
-			AxdbContext Axdb = new AxdbContext();
-			DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+            CkhelperdbContext db3 = new CkhelperdbContext();
+            AxdbContext Axdb = new AxdbContext();
+            DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
             db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
             //Store List Text=StoreName , Value = StoreId
             var username = HttpContext.Session.GetString("Username");
@@ -131,8 +280,8 @@ namespace CK.Controllers
             }
             bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
             bool isFmanager = db2.RptUsers.Any(s => s.Fmanager == username);
-            bool isUsername = db2.RptUsers.Any(s => s.Username == username &&( s.Storenumber != null ||s.Storenumber!=" "));
-           
+            bool isUsername = db2.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
+
             IQueryable<Storeuser> query;
             if (isDmanager || isUsername || isFmanager)
             {
@@ -288,7 +437,7 @@ namespace CK.Controllers
             Parobj.VTotalSales = true;
             Parobj.VDepartment = true;
             Parobj.VStoreName = true;
-            Parobj.RMS=true;
+            Parobj.RMS = true;
             Parobj.TMT = true;
 
             if (Parobj.RMS || Parobj.TMT)
@@ -362,7 +511,7 @@ namespace CK.Controllers
                 // Decrypt each user's password
                 foreach (var user in storeUsers)
                 {
-                  user.DecryptedPassword = decrypt(user.Password); // Assuming 'decrypt' is your decryption method
+                    user.DecryptedPassword = decrypt(user.Password); // Assuming 'decrypt' is your decryption method
                 }
 
                 return View(storeUsers);
@@ -378,11 +527,12 @@ namespace CK.Controllers
             }
         }
         public IActionResult ExportToExcel(string connectionString, SalesParameters Parobj)
-         {
+        {
             DataCenterContext db = new DataCenterContext();
             CkproUsersContext db2 = new CkproUsersContext();
             CkhelperdbContext db3 = new CkhelperdbContext();
             DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+            Storeuser n = new Storeuser();
             var username = HttpContext.Session.GetString("Username");
             var Role = HttpContext.Session.GetString("Role");
             ViewBag.Username = username;
@@ -391,211 +541,211 @@ namespace CK.Controllers
             // Prepare the SQL query with a parameter placeholder
             // Start building the SELECT clause dynamically
             List<string> selectColumns = new List<string>();
-                if (Parobj.VPerDay)
-                    selectColumns.Add("CAST(transdate as date) as Date");
-                if (Parobj.VPerYear || Parobj.VPerMonYear)
-                    selectColumns.Add("ByYear");
-                if (Parobj.VPerMon || Parobj.VPerMonYear)
-                    selectColumns.Add("ByMonth");
-                if (Parobj.VStoreId)
-                    selectColumns.Add("StoreID");
-                if (Parobj.VStoreName)
-                    selectColumns.Add("StoreName as 'Store Name'");
-                if (Parobj.VDpId)
-                    selectColumns.Add("DpID as 'Department Id'");
-                if (Parobj.VDepartment)
-                    selectColumns.Add("dpname Department");
-                if (Parobj.VItemLookupCode)
-                    selectColumns.Add("Itemlookupcode");
-                if (Parobj.VItemName)
-                    selectColumns.Add("ItemName");
-                if (Parobj.VSupplierId)
-                    selectColumns.Add("SupplierCode");
-                if (Parobj.VSupplierName)
-                    selectColumns.Add("SupplierName");
-                if (Parobj.VFranchise)
-                    selectColumns.Add("StoreFranchise");
-                if (Parobj.VTransactionNumber)
-                    selectColumns.Add("TransactionNumber");
-                if (Parobj.VQty)
-                    selectColumns.Add("sum(Qty)TotalQty");
-                if (Parobj.VPrice)
-                    selectColumns.Add("Price");
-                if (Parobj.VCost)
-                    selectColumns.Add("Cost");
-                if (Parobj.VTotalSales)
-                    selectColumns.Add("sum(TotalSales)TotalSales");
-                if (Parobj.VTransactionCount)
-                    selectColumns.Add("count(distinct TransactionNumber) TransactionsCount");
-                if (Parobj.VTotalCost)
-                    selectColumns.Add("sum(Cost)TotalCost");
-                if (Parobj.VTotalTax)
-                    selectColumns.Add("sum(Tax)TotalTax");
-                if (Parobj.VTotalSalesTax)
-                    selectColumns.Add("sum(TotalSales)TotalSaleswithTax");
-                if (Parobj.VTotalSalesWithoutTax)
-                    selectColumns.Add("sum(TotalSalesWithoutTax)TotalSalesWithoutTax");
-                if (Parobj.VTotalCostQty)
-                    selectColumns.Add("sum(TotalCostQty)TotalCostQty");
+            if (Parobj.VPerDay)
+                selectColumns.Add("CAST(transdate as date) as Date");
+            if (Parobj.VPerYear || Parobj.VPerMonYear)
+                selectColumns.Add("ByYear");
+            if (Parobj.VPerMon || Parobj.VPerMonYear)
+                selectColumns.Add("ByMonth");
+            if (Parobj.VStoreId)
+                selectColumns.Add("StoreID");
+            if (Parobj.VStoreName)
+                selectColumns.Add("StoreName as 'Store Name'");
+            if (Parobj.VDpId)
+                selectColumns.Add("DpID as 'Department Id'");
+            if (Parobj.VDepartment)
+                selectColumns.Add("dpname Department");
+            if (Parobj.VItemLookupCode)
+                selectColumns.Add("Itemlookupcode");
+            if (Parobj.VItemName)
+                selectColumns.Add("ItemName");
+            if (Parobj.VSupplierId)
+                selectColumns.Add("SupplierCode");
+            if (Parobj.VSupplierName)
+                selectColumns.Add("SupplierName");
+            if (Parobj.VFranchise)
+                selectColumns.Add("StoreFranchise");
+            if (Parobj.VTransactionNumber)
+                selectColumns.Add("TransactionNumber");
+            if (Parobj.VQty)
+                selectColumns.Add("sum(Qty)TotalQty");
+            if (Parobj.VPrice)
+                selectColumns.Add("Price");
+            if (Parobj.VCost)
+                selectColumns.Add("Cost");
+            if (Parobj.VTotalSales)
+                selectColumns.Add("sum(TotalSales)TotalSales");
+            if (Parobj.VTransactionCount)
+                selectColumns.Add("count(distinct TransactionNumber) TransactionsCount");
+            if (Parobj.VTotalCost)
+                selectColumns.Add("sum(Cost)TotalCost");
+            if (Parobj.VTotalTax)
+                selectColumns.Add("sum(Tax)TotalTax");
+            if (Parobj.VTotalSalesTax)
+                selectColumns.Add("sum(TotalSales)TotalSaleswithTax");
+            if (Parobj.VTotalSalesWithoutTax)
+                selectColumns.Add("sum(TotalSalesWithoutTax)TotalSalesWithoutTax");
+            if (Parobj.VTotalCostQty)
+                selectColumns.Add("sum(TotalCostQty)TotalCostQty");
             // Construct the SELECT clause from the list of columns
             string selectClause = string.Join(", ", selectColumns);
             string fromWhereClause = null;
             DateTime startDateTime = Convert.ToDateTime(Parobj.startDate, new CultureInfo("en-GB"));
             DateTime endDateTime = Convert.ToDateTime(Parobj.endDate, new CultureInfo("en-GB"));
+            Parobj.Store = "0";
             string[] storeVal = Parobj.Store.Split(':');
-            if ((Parobj.RMS && Parobj.TMT == false )||(Parobj.RMS&& storeVal[0] == "RMS"))
+            if ((Parobj.RMS && Parobj.TMT == false) || (Parobj.RMS && storeVal[0] == "RMS"))
             {
+                fromWhereClause = @"FROM
+            (select 
+            dp.code DpID,dp.ID GroupId, dp.Name DpName,
+            Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
+            T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
+            T.TransactionTime TransTime,
+            Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
+            convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
+            (T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
+            ,Convert (varchar(20),item.SupplierId )SupplierCode";
                 if (Parobj.VSupplierId || Parobj.VSupplierName)
                 {
-                    fromWhereClause = "FROM  RptSalesbySupplier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause += ",Sub.SupplierName";
                 }
-                else
-                {
-                    fromWhereClause = @"FROM
-(select 
-dp.code DpID,dp.ID GroupId, dp.Name DpName,
-Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
-T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
-T.TransactionTime TransTime,
-Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
-convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
-(T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
-,Convert (varchar(20),item.SupplierId )SupplierCode1
---,sub.Code SupplierId ,sub.SupplierName SupplierName,sub.Code SupplierCode
-,s.DManager,s.Username,s.FManager
-from TransactionEntry T 
-left join Item on Item.ID=T.ItemID and T.StoreID=Item.storeid --and item.Quantity!=0
-left join department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
-left join Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
-left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID ))RptSales
- WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                }
-            }
-            else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
-            {
-                fromWhereClause = "FROM RptSalesData where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                //fromWhereClause ="from (Select SalesD.TRANSACTIONID TransactionNumber,SalesH.STORE StoreID,SalesD.COSTAMOUNT Cost--,Store.Name StoreName,SalesD.ITEMID ItemLookupCode,-TAXAMOUNT Tax,Day(SalesH.TRANSDATE) ByDay,Month(SalesH.TRANSDATE) ByMonth,Year(SalesH.TRANSDATE)ByYear,SalesH.TRANSDATE TransTime,SalesH.TRANSDATE As TransDate,-SalesD.Qty Qty,-(SalesD.COSTAMOUNT*SalesD.Qty)TotalCostQty,SalesD.Price Price,-(SalesD.NETAMOUNTINCLTAX) TotalSales,-(SalesD.NETAMOUNTINCLTAX) TotalSalesTax, -(SalesD.NETAMOUNT) TotalSalesWithoutTax,Case when SalesH.STORE='143' then 'Sub-Franchise' else 'TMT' end As StoreFranchise ,INV.[Primaryvendorid] SupplierName, INV.[Primaryvendorid] SupplierCode ,It.[NAME] ItemName from  RetailChannelDatabase.ax.RetailTransactiontable SalesH INNER JOIN RetailChannelDatabase.ax.RETAILTRANSACTIONSALESTRANS SalesD ON SalesH.TRANSACTIONID = SalesD.TRANSACTIONID INNER JOIN  RetailChannelDatabase.ax.[Inventtable] as INV on SalesD.ITEMID = INV.ITEMID inner JOIN  RetailChannelDatabase.ax.[Ecoresproducttranslation] as It on INV.PRODUCT = It.PRODUCT   where SalesH.ENTRYSTATUS!=1  and SalesH.TYPE=2 AND INV.[DATAAREAID] = 'tmt' )s";            }
-            }
-            //if (Parobj.RMS && Parobj.TMT && storeVal[0] != "RMS" && storeVal[1] != "Dy" || (Parobj.RMS && Parobj.TMT && storeVal[0] == "0" && storeVal[1] == "0"))
-            else if (Parobj.DBbefore)
-            {
-                // fromWhereClause = "FROM AAArptsales where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                fromWhereClause = "FROM RptSales2 where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-            }
-            else
-            {
-                if (Parobj.VSupplierId || Parobj.VSupplierName)
-                {
-                    fromWhereClause = "from RptSalesAllwithSuppllier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                }
-                else
-                {
-                    fromWhereClause = "from RptSalesAll WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                }
-            }
-           // string MessageBox = string.Empty;
-            // Add department filter if a department is specified
-            if (!string.IsNullOrEmpty(Parobj.Department) && Parobj.Department != "0")
-            {
-                fromWhereClause += "AND DpId = @Department ";
-            }
-            if (!string.IsNullOrEmpty(Parobj.Supplier) && Parobj.Supplier != "0")
-            {
-                fromWhereClause += "AND SupplierCode = @Supplier ";
-            }
-            bool isFmanager = db2.RptUsers.Any(s => s.Fmanager == username);
-            bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username );
-            bool isUsername = db2.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
-            IQueryable<Storeuser> query;
-            if (isDmanager || isUsername || isFmanager)
-            {
-                fromWhereClause += "AND (Dmanager='" + username + "' or username ='" + username + "' or Fmanager ='" + username +"') ";
-
-            }
-            if (Parobj.Store != "0")
-            {
-                if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
-                {
-                    fromWhereClause += "AND StoreId = @Store1 ";
+                fromWhereClause += @",s.DManager,s.Username,s.FManager from TransactionEntry T 
+            left join Item on Item.ID=T.ItemID and T.StoreID=Item.storeid --and item.Quantity!=0
+            left join department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
+            left join Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
+            left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID )";
+                    if (Parobj.VSupplierId || Parobj.VSupplierName)
+                    {
+                        fromWhereClause += "left join Supplier Sub on  Sub.storeid=stores.STORE_ID and Sub.id=item.SupplierID";
+                    }
+                    fromWhereClause += ")RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
                 else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
                 {
-                    fromWhereClause += "AND StoreId = @Store ";
+                    fromWhereClause = "FROM AXDBSales where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    //fromWhereClause ="from (Select SalesD.TRANSACTIONID TransactionNumber,SalesH.STORE StoreID,SalesD.COSTAMOUNT Cost--,Store.Name StoreName,SalesD.ITEMID ItemLookupCode,-TAXAMOUNT Tax,Day(SalesH.TRANSDATE) ByDay,Month(SalesH.TRANSDATE) ByMonth,Year(SalesH.TRANSDATE)ByYear,SalesH.TRANSDATE TransTime,SalesH.TRANSDATE As TransDate,-SalesD.Qty Qty,-(SalesD.COSTAMOUNT*SalesD.Qty)TotalCostQty,SalesD.Price Price,-(SalesD.NETAMOUNTINCLTAX) TotalSales,-(SalesD.NETAMOUNTINCLTAX) TotalSalesTax, -(SalesD.NETAMOUNT) TotalSalesWithoutTax,Case when SalesH.STORE='143' then 'Sub-Franchise' else 'TMT' end As StoreFranchise ,INV.[Primaryvendorid] SupplierName, INV.[Primaryvendorid] SupplierCode ,It.[NAME] ItemName from  RetailChannelDatabase.ax.RetailTransactiontable SalesH INNER JOIN RetailChannelDatabase.ax.RETAILTRANSACTIONSALESTRANS SalesD ON SalesH.TRANSACTIONID = SalesD.TRANSACTIONID INNER JOIN  RetailChannelDatabase.ax.[Inventtable] as INV on SalesD.ITEMID = INV.ITEMID inner JOIN  RetailChannelDatabase.ax.[Ecoresproducttranslation] as It on INV.PRODUCT = It.PRODUCT   where SalesH.ENTRYSTATUS!=1  and SalesH.TYPE=2 AND INV.[DATAAREAID] = 'tmt' )s";            }
                 }
-                else if (Parobj.RMS && Parobj.TMT)
+                //if (Parobj.RMS && Parobj.TMT && storeVal[0] != "RMS" && storeVal[1] != "Dy" || (Parobj.RMS && Parobj.TMT && storeVal[0] == "0" && storeVal[1] == "0"))
+                else if (Parobj.DBbefore)
                 {
-                   fromWhereClause += "AND (StoreIdD = @Store OR StoreIdR = @Store1) ";
-
+                    // fromWhereClause = "FROM AAArptsales where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause = "FROM RptSales2 where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
-                else                 
+                else
                 {
-                    fromWhereClause += "AND StoreId = @Store1 ";
-                }
-            }
-            if (Parobj.Franchise == "TMT")
-            {
-                fromWhereClause += "AND StoreFranchise = 'TMT'";
-            }
-            if (Parobj.Franchise == "SUB-FRANCHISE")
-            {
-                fromWhereClause += "AND StoreFranchise = 'SUB-FRANCHISE'";
-            }
-            // Add ItemLookupCode filter if ItemLookupCodeTxt is not null or empty
-            if (!string.IsNullOrEmpty(Parobj.ItemLookupCodeTxt))
-            {
-                // Split the string into an array of values
-                string[] itemLookupCodes = Parobj.ItemLookupCodeTxt.Split(',');
-
-                // Start building the IN clause
-                fromWhereClause += " AND ItemLookupCode IN (";
-
-                // Add a parameter placeholder for each value
-                for (int i = 0; i < itemLookupCodes.Length; i++)
-                {
-                    // Trim any whitespace from the value
-                    string itemLookupCode = itemLookupCodes[i].Trim();
-
-                    // Append the parameter placeholder to the IN clause
-                    fromWhereClause += $"@ItemLookupCode{i}";
-
-                    // Add a comma separator if not the last item
-                    if (i < itemLookupCodes.Length - 1)
+                    if (Parobj.VSupplierId || Parobj.VSupplierName)
                     {
-                        fromWhereClause += ",";
+                        fromWhereClause = "from RptSalesAllwithSuppllier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    }
+                    else
+                    {
+                        fromWhereClause = "from RptSalesAll WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                     }
                 }
-
-                fromWhereClause += ")";
-            }
-            if (!string.IsNullOrEmpty(Parobj.ItemNameTxt))
-            {
-                // Split the string into an array of values
-                string[] ItemNames = Parobj.ItemNameTxt.Split(',');
-
-                // Start building the IN clause
-                fromWhereClause += " AND ItemLookupCode IN (";
-
-                // Add a parameter placeholder for each value
-                for (int i = 0; i < ItemNames.Length; i++)
+                // string MessageBox = string.Empty;
+                // Add department filter if a department is specified
+                if (!string.IsNullOrEmpty(Parobj.Department) && Parobj.Department != "0")
                 {
-                    // Trim any whitespace from the value
-                    string ItemName = ItemNames[i].Trim();
+                    fromWhereClause += "AND DpId = @Department ";
+                }
+                if (!string.IsNullOrEmpty(Parobj.Supplier) && Parobj.Supplier != "0")
+                {
+                    fromWhereClause += "AND SupplierCode = @Supplier ";
+                }
+                bool isFmanager = db2.RptUsers.Any(s => s.Fmanager == username);
+                bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
+                bool isUsername = db2.RptUsers.Any(s => s.Username == username && (s.Storenumber != null || s.Storenumber != " "));
+                IQueryable<Storeuser> query;
+                if (isDmanager || isUsername || isFmanager)
+                {
+                    fromWhereClause += "AND (Dmanager='" + username + "' or username ='" + username + "' or Fmanager ='" + username + "') ";
 
-                    // Append the parameter placeholder to the IN clause
-                    fromWhereClause += $"@ItemName{i}";
-
-                    // Add a comma separator if not the last item
-                    if (i < ItemNames.Length - 1)
+                }
+                if (Parobj.Store != "0")
+                {
+                    if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS" || Parobj.DBbefore)
                     {
-                        fromWhereClause += ",";
+                        fromWhereClause += "AND StoreId = @Store1 ";
+                    }
+                    else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
+                    {
+                        fromWhereClause += "AND StoreId = @Store ";
+                    }
+                    else if (Parobj.RMS && Parobj.TMT)
+                    {
+                        fromWhereClause += "AND (StoreIdD = @Store OR StoreIdR = @Store1) ";
+
+                    }
+                    else
+                    {
+                        fromWhereClause += "AND StoreId = @Store1 ";
                     }
                 }
+                if (Parobj.Franchise == "TMT")
+                {
+                    fromWhereClause += "AND StoreFranchise = 'TMT'";
+                }
+                if (Parobj.Franchise == "SUB-FRANCHISE")
+                {
+                    fromWhereClause += "AND StoreFranchise = 'SUB-FRANCHISE'";
+                }
+                // Add ItemLookupCode filter if ItemLookupCodeTxt is not null or empty
+                if (!string.IsNullOrEmpty(Parobj.ItemLookupCodeTxt))
+                {
+                    // Split the string into an array of values
+                    string[] itemLookupCodes = Parobj.ItemLookupCodeTxt.Split(',');
 
-                fromWhereClause += ")";
-            }
-            string sqlQuery = $"SELECT {selectClause} {fromWhereClause}";
-            // Start building the GROUP BY clause dynamically
-            List<string> groupByColumns = new List<string>();
+                    // Start building the IN clause
+                    fromWhereClause += " AND ItemLookupCode IN (";
+
+                    // Add a parameter placeholder for each value
+                    for (int i = 0; i < itemLookupCodes.Length; i++)
+                    {
+                        // Trim any whitespace from the value
+                        string itemLookupCode = itemLookupCodes[i].Trim();
+
+                        // Append the parameter placeholder to the IN clause
+                        fromWhereClause += $"@ItemLookupCode{i}";
+
+                        // Add a comma separator if not the last item
+                        if (i < itemLookupCodes.Length - 1)
+                        {
+                            fromWhereClause += ",";
+                        }
+                    }
+
+                    fromWhereClause += ")";
+                }
+                if (!string.IsNullOrEmpty(Parobj.ItemNameTxt))
+                {
+                    // Split the string into an array of values
+                    string[] ItemNames = Parobj.ItemNameTxt.Split(',');
+
+                    // Start building the IN clause
+                    fromWhereClause += " AND ItemLookupCode IN (";
+
+                    // Add a parameter placeholder for each value
+                    for (int i = 0; i < ItemNames.Length; i++)
+                    {
+                        // Trim any whitespace from the value
+                        string ItemName = ItemNames[i].Trim();
+
+                        // Append the parameter placeholder to the IN clause
+                        fromWhereClause += $"@ItemName{i}";
+
+                        // Add a comma separator if not the last item
+                        if (i < ItemNames.Length - 1)
+                        {
+                            fromWhereClause += ",";
+                        }
+                    }
+
+                    fromWhereClause += ")";
+                }
+                string sqlQuery = $"SELECT {selectClause} {fromWhereClause}";
+                // Start building the GROUP BY clause dynamically
+                List<string> groupByColumns = new List<string>();
                 if (Parobj.VPerYear || Parobj.VPerMonYear)
                     groupByColumns.Add("ByYear");
                 if (Parobj.VPerMon || Parobj.VPerMonYear)
@@ -626,107 +776,126 @@ left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.St
                     groupByColumns.Add("Cost");
                 if (Parobj.VPerDay)
                     groupByColumns.Add("CAST(transdate as date)");
-           // Do not include sum(totalsales) in the GROUP BY clause
+                // Do not include sum(totalsales) in the GROUP BY clause
 
-            // Construct the GROUP BY clause from the list of columns
-            string groupByClause = groupByColumns.Count > 0 ? "GROUP BY " + string.Join(", ", groupByColumns) : "";
+                // Construct the GROUP BY clause from the list of columns
+                string groupByClause = groupByColumns.Count > 0 ? "GROUP BY " + string.Join(", ", groupByColumns) : "";
 
-            sqlQuery += groupByClause;
+                sqlQuery += groupByClause;
+            List<SalesParameters> salesDataList = new List<SalesParameters>();
+
             using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                //string storedProcedureName = "R2"; // Replace with your actual stored procedure name
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
                 {
+                    connection.Open();
+                    //string storedProcedureName = "R2"; // Replace with your actual stored procedure name
+                    using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                    {
                     //command.CommandType = CommandType.StoredProcedure;
                     //sqlQuery = "SELECT sum(TotalSales) TotalSales FROM RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate";
                     command.CommandTimeout = 7200;
-                    // Add the date parameters to the command if they are not null
-                    if (!string.IsNullOrEmpty(Parobj.startDate))
-                    {
-                        command.Parameters.AddWithValue("@fromDate", startDateTime.Date.ToString("yyyy-MM-dd"));
-                    }
-                    if (!string.IsNullOrEmpty(Parobj.endDate))
-                    {
-                        command.Parameters.AddWithValue("@toDate", endDateTime.Date.ToString("yyyy-MM-dd"));
-                    }
-                    if (Parobj.Store != "0")
-                    {
-                        if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS")
+                        // Add the date parameters to the command if they are not null
+                        if (!string.IsNullOrEmpty(Parobj.startDate))
                         {
-                            if (storeVal.Length > 1 && int.TryParse(storeVal[1], out int storeId))
-                            {
-                                command.Parameters.AddWithValue("@Store1", storeId);
-                            }
+                            command.Parameters.AddWithValue("@fromDate", startDateTime.Date.ToString("yyyy-MM-dd"));
                         }
-                        else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
+                        if (!string.IsNullOrEmpty(Parobj.endDate))
                         {
-                            if (storeVal.Length > 1 && int.TryParse(storeVal[0], out int storeId))
-                            {
-                                command.Parameters.AddWithValue("@Store", storeId);
-                            }
+                            command.Parameters.AddWithValue("@toDate", endDateTime.Date.ToString("yyyy-MM-dd"));
                         }
-                       else if (Parobj.RMS && Parobj.TMT)// && storeVal[0] != "RMS" && storeVal[1] != "Dy" || (Parobj.RMS && Parobj.TMT && storeVal[0] == "0" && storeVal[1] == "0"))
+                        if (Parobj.Store != "0")
                         {
-                            if (storeVal.Length > 1)
+                            if (Parobj.RMS && Parobj.TMT == false || storeVal[0] == "RMS")
                             {
-                                int storeIdd, storeIdr;
-                                // Attempt to parse storeVal[0] and storeVal[1] as integers
-                                bool isStoreIddParsed = int.TryParse(storeVal[0], out storeIdd);
-                                bool isStoreIdrParsed = int.TryParse(storeVal[1], out storeIdr);
-
-                                // Check if at least one of the values was successfully parsed
-                                if (isStoreIddParsed || isStoreIdrParsed)
+                                if (storeVal.Length > 1 && int.TryParse(storeVal[1], out int storeId))
                                 {
-                                    // If storeVal[0] was successfully parsed, add it as a parameter
-                                    if (isStoreIddParsed)
-                                    {
-                                        command.Parameters.AddWithValue("@Store", storeIdd);
-                                    }
+                                    command.Parameters.AddWithValue("@Store1", storeId);
+                                }
+                            }
+                            else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
+                            {
+                                if (storeVal.Length > 1 && int.TryParse(storeVal[0], out int storeId))
+                                {
+                                    command.Parameters.AddWithValue("@Store", storeId);
+                                }
+                            }
+                            else if (Parobj.RMS && Parobj.TMT)// && storeVal[0] != "RMS" && storeVal[1] != "Dy" || (Parobj.RMS && Parobj.TMT && storeVal[0] == "0" && storeVal[1] == "0"))
+                            {
+                                if (storeVal.Length > 1)
+                                {
+                                    int storeIdd, storeIdr;
+                                    // Attempt to parse storeVal[0] and storeVal[1] as integers
+                                    bool isStoreIddParsed = int.TryParse(storeVal[0], out storeIdd);
+                                    bool isStoreIdrParsed = int.TryParse(storeVal[1], out storeIdr);
 
-                                    // If storeVal[1] was successfully parsed, add it as a parameter
-                                    if (isStoreIdrParsed)
+                                    // Check if at least one of the values was successfully parsed
+                                    if (isStoreIddParsed || isStoreIdrParsed)
                                     {
-                                        command.Parameters.AddWithValue("@Store1", storeIdr);
+                                        // If storeVal[0] was successfully parsed, add it as a parameter
+                                        if (isStoreIddParsed)
+                                        {
+                                            command.Parameters.AddWithValue("@Store", storeIdd);
+                                        }
+
+                                        // If storeVal[1] was successfully parsed, add it as a parameter
+                                        if (isStoreIdrParsed)
+                                        {
+                                            command.Parameters.AddWithValue("@Store1", storeIdr);
+                                        }
                                     }
                                 }
                             }
+                            else
+                            {
+                                return View();
+                            }
                         }
-                        else
+                        if (!string.IsNullOrEmpty(Parobj.Department) && Parobj.Department != "0")
                         {
-                            return View();
+                            command.Parameters.AddWithValue("@Department", Parobj.Department);
                         }
-                    }
-                    if (!string.IsNullOrEmpty(Parobj.Department) && Parobj.Department != "0")
-                    {
-                        command.Parameters.AddWithValue("@Department", Parobj.Department);
-                    }
-                    if (!string.IsNullOrEmpty(Parobj.Supplier) && Parobj.Supplier != "0")
-                    {
-                        command.Parameters.AddWithValue("@Supplier", Parobj.Supplier);
-                    }
-                    if (!string.IsNullOrEmpty(Parobj.ItemLookupCodeTxt))
-                    {
-                        string[] itemLookupCodes = Parobj.ItemLookupCodeTxt.Split(',');
-                        for (int i = 0; i < itemLookupCodes.Length; i++)
+                        if (!string.IsNullOrEmpty(Parobj.Supplier) && Parobj.Supplier != "0")
                         {
-                            string itemLookupCode = itemLookupCodes[i].Trim();
-                            command.Parameters.AddWithValue($"@ItemLookupCode{i}", itemLookupCode);
+                            command.Parameters.AddWithValue("@Supplier", Parobj.Supplier);
                         }
-                    }
-                    if (!string.IsNullOrEmpty(Parobj.ItemNameTxt))
-                    {
-                        string[] ItemNames = Parobj.ItemNameTxt.Split(',');
-                        for (int i = 0; i < ItemNames.Length; i++)
+                        if (!string.IsNullOrEmpty(Parobj.ItemLookupCodeTxt))
                         {
-                            string ItemName = ItemNames[i].Trim();
-                            command.Parameters.AddWithValue($"@ItemName{i}", ItemName);
+                            string[] itemLookupCodes = Parobj.ItemLookupCodeTxt.Split(',');
+                            for (int i = 0; i < itemLookupCodes.Length; i++)
+                            {
+                                string itemLookupCode = itemLookupCodes[i].Trim();
+                                command.Parameters.AddWithValue($"@ItemLookupCode{i}", itemLookupCode);
+                            }
                         }
-                    }
+                        if (!string.IsNullOrEmpty(Parobj.ItemNameTxt))
+                        {
+                            string[] ItemNames = Parobj.ItemNameTxt.Split(',');
+                            for (int i = 0; i < ItemNames.Length; i++)
+                            {
+                                string ItemName = ItemNames[i].Trim();
+                                command.Parameters.AddWithValue($"@ItemName{i}", ItemName);
+                            }
+                        }
+                    //    if (Parobj.VTotalSales)
+                    //{
+                    //    var vi = new List<RptSale>();
+                    //    var test = command.ExecuteReader();
+                    //    while (test.Read())
+                    //    {
+                    //        RptSale si = new RptSale();
+                    //        si.TotalSales = (double)test["TotalSales"];
+                    //        si.StoreName = test["Store Name"].ToString();
+                    //        vi.Add(si);
+                    //    }
+                    //    ViewBag.Data = vi;
+                    //    return View("Index");
+                    //}
+                    
+
+                    //return View( vi.ToList());
                     // Create a new Excel package
-               //     try
-                //    {
-                        using (var package = new ExcelPackage())
+                    //     try
+                    //    {
+                    using (var package = new ExcelPackage())
                         {
                             ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("AKSalesReport");
                             int row = 2; // Start from row 2 to leave space for headers
@@ -796,12 +965,98 @@ left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.St
                                 }
                             }
                             AddHeaderRow(worksheet, columnCount);
-                                //row = 2;
-                                using (SqlDataReader reader = command.ExecuteReader())
+                            //row = 2;
+                            using (SqlDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
                                 {
-                                    while (reader.Read())
+                                    columnCount = 1; // Reset column count for each row
+                                    if (Parobj.VPerYear || Parobj.VPerMonYear)
+                                        worksheet.Cells[row, columnCount++].Value = reader["ByYear"];
+                                    if (Parobj.VPerMon || Parobj.VPerMonYear)
+                                        worksheet.Cells[row, columnCount++].Value = reader["ByMonth"];
+                                    if (Parobj.VStoreId)
+                                        worksheet.Cells[row, columnCount++].Value = reader["StoreID"];
+                                    if (Parobj.VStoreName)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Store Name"];
+                                    if (Parobj.VDpId)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Department Id"];
+                                    if (Parobj.VDepartment)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Department"];
+                                    if (Parobj.VItemLookupCode)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Itemlookupcode"];
+                                    if (Parobj.VItemName)
+                                        worksheet.Cells[row, columnCount++].Value = reader["ItemName"];
+                                    if (Parobj.VSupplierId)
+                                        worksheet.Cells[row, columnCount++].Value = reader["SupplierCode"];
+                                    if (Parobj.VSupplierName)
+                                        worksheet.Cells[row, columnCount++].Value = reader["SupplierName"];
+                                    if (Parobj.VFranchise)
+                                        worksheet.Cells[row, columnCount++].Value = reader["StoreFranchise"];
+                                    if (Parobj.VTransactionNumber)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TransactionNumber"];
+                                    if (Parobj.VQty)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalQty"];
+                                    if (Parobj.VPrice)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Price"];
+                                    if (Parobj.VCost)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Cost"];
+                                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                                    if (Parobj.VTotalSales)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalSales"];
+                                    if (Parobj.VTransactionCount)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TransactionsCount"];
+                                    if (Parobj.VTotalCost)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalCost"];
+                                    if (Parobj.VTotalTax)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalTax"];
+                                    if (Parobj.VTotalSalesTax)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalSaleswithTax"];
+                                    if (Parobj.VTotalSalesWithoutTax)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalSalesWithoutTax"];
+                                    if (Parobj.VTotalCostQty)
+                                        worksheet.Cells[row, columnCount++].Value = reader["TotalCostQty"];
+                                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "yyyy-MM-dd";
+                                    if (Parobj.VPerDay)
+                                        worksheet.Cells[row, columnCount++].Value = reader["Date"];
+                                    if (columnCount <= 1)
                                     {
-                                        columnCount = 1; // Reset column count for each row
+                                        Console.WriteLine("Error: columnCount is 0. No data to process.");
+                                        // Optionally, throw an exception to halt execution
+                                        // throw new InvalidOperationException("columnCount is 0. No data to process.");
+                                    }
+                                    else
+                                    {
+                                        using (var rowRange = worksheet.Cells[row, 1, row, columnCount - 1])
+                                        {
+                                            rowRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+                                            if (row % 2 == 0) // Even row
+                                            {
+                                                rowRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                                rowRange.Style.Fill.BackgroundColor.SetColor(Color.LightBlue); // Light gray for even rows
+                                            }
+                                            rowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                            rowRange.Style.Border.Top.Color.SetColor(Color.LightBlue); // Set border color to black
+                                            rowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                            rowRange.Style.Border.Bottom.Color.SetColor(Color.LightBlue); // Set border color to black
+                                            rowRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                            rowRange.Style.Border.Left.Color.SetColor(Color.LightBlue); // Set border color to black
+                                            rowRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                            rowRange.Style.Border.Right.Color.SetColor(Color.LightBlue); // Set border color to black
+                                        }
+                                        row++;
+                                    }
+
+                                    if (row == 1000001)
+                                    {
+                                        // Create a new worksheet and reset the row count
+                                        worksheet = package.Workbook.Worksheets.Add($"AKSalesReport{sheetIndex++}");
+                                        // Re-add the header row to the new worksheet
+                                        row = 2; // Reset row count for the new worksheet
+                                        columnCount = 1; // Reset column count
+                                                         // Re-add the header row to the new worksheet\
+                                        AddHeaderRow(worksheet, columnCount);
                                         if (Parobj.VPerYear || Parobj.VPerMonYear)
                                             worksheet.Cells[row, columnCount++].Value = reader["ByYear"];
                                         if (Parobj.VPerMon || Parobj.VPerMonYear)
@@ -858,6 +1113,7 @@ left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.St
                                         }
                                         else
                                         {
+                                            // Apply styling to the row
                                             using (var rowRange = worksheet.Cells[row, 1, row, columnCount - 1])
                                             {
                                                 rowRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
@@ -876,97 +1132,10 @@ left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.St
                                                 rowRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
                                                 rowRange.Style.Border.Right.Color.SetColor(Color.LightBlue); // Set border color to black
                                             }
-                                            row++;
-                                        }
-
-                                        if (row == 1000001)
-                                        {
-                                            // Create a new worksheet and reset the row count
-                                            worksheet = package.Workbook.Worksheets.Add($"AKSalesReport{sheetIndex++}");
-                                            // Re-add the header row to the new worksheet
-                                            row = 2; // Reset row count for the new worksheet
-                                            columnCount = 1; // Reset column count
-                                                             // Re-add the header row to the new worksheet\
-                                            AddHeaderRow(worksheet, columnCount);
-                                            if (Parobj.VPerYear || Parobj.VPerMonYear)
-                                                worksheet.Cells[row, columnCount++].Value = reader["ByYear"];
-                                            if (Parobj.VPerMon || Parobj.VPerMonYear)
-                                                worksheet.Cells[row, columnCount++].Value = reader["ByMonth"];
-                                            if (Parobj.VStoreId)
-                                                worksheet.Cells[row, columnCount++].Value = reader["StoreID"];
-                                            if (Parobj.VStoreName)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Store Name"];
-                                            if (Parobj.VDpId)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Department Id"];
-                                            if (Parobj.VDepartment)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Department"];
-                                            if (Parobj.VItemLookupCode)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Itemlookupcode"];
-                                            if (Parobj.VItemName)
-                                                worksheet.Cells[row, columnCount++].Value = reader["ItemName"];
-                                            if (Parobj.VSupplierId)
-                                                worksheet.Cells[row, columnCount++].Value = reader["SupplierCode"];
-                                            if (Parobj.VSupplierName)
-                                                worksheet.Cells[row, columnCount++].Value = reader["SupplierName"];
-                                            if (Parobj.VFranchise)
-                                                worksheet.Cells[row, columnCount++].Value = reader["StoreFranchise"];
-                                            if (Parobj.VTransactionNumber)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TransactionNumber"];
-                                            if (Parobj.VQty)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalQty"];
-                                            if (Parobj.VPrice)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Price"];
-                                            if (Parobj.VCost)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Cost"];
-                                            worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
-                                            if (Parobj.VTotalSales)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalSales"];
-                                            if (Parobj.VTransactionCount)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TransactionsCount"];
-                                            if (Parobj.VTotalCost)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalCost"];
-                                            if (Parobj.VTotalTax)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalTax"];
-                                            if (Parobj.VTotalSalesTax)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalSaleswithTax"];
-                                            if (Parobj.VTotalSalesWithoutTax)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalSalesWithoutTax"];
-                                            if (Parobj.VTotalCostQty)
-                                                worksheet.Cells[row, columnCount++].Value = reader["TotalCostQty"];
-                                            worksheet.Cells[row, columnCount].Style.Numberformat.Format = "yyyy-MM-dd";
-                                            if (Parobj.VPerDay)
-                                                worksheet.Cells[row, columnCount++].Value = reader["Date"];
-                                            if (columnCount <= 1)
-                                            {
-                                                Console.WriteLine("Error: columnCount is 0. No data to process.");
-                                                // Optionally, throw an exception to halt execution
-                                                // throw new InvalidOperationException("columnCount is 0. No data to process.");
-                                            }
-                                            else
-                                            {
-                                                // Apply styling to the row
-                                                using (var rowRange = worksheet.Cells[row, 1, row, columnCount - 1])
-                                                {
-                                                    rowRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-
-                                                    if (row % 2 == 0) // Even row
-                                                    {
-                                                        rowRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                                        rowRange.Style.Fill.BackgroundColor.SetColor(Color.LightBlue); // Light gray for even rows
-                                                    }
-                                                    rowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                                    rowRange.Style.Border.Top.Color.SetColor(Color.LightBlue); // Set border color to black
-                                                    rowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                                                    rowRange.Style.Border.Bottom.Color.SetColor(Color.LightBlue); // Set border color to black
-                                                    rowRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                                    rowRange.Style.Border.Left.Color.SetColor(Color.LightBlue); // Set border color to black
-                                                    rowRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                                    rowRange.Style.Border.Right.Color.SetColor(Color.LightBlue); // Set border color to black
-                                                }
-                                            }
                                         }
                                     }
                                 }
+                            }
                             worksheet.Cells.AutoFitColumns();
                             // Save the package to a MemoryStream
                             var stream = new MemoryStream();
@@ -990,382 +1159,387 @@ left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.St
                             HttpContext.Session.SetString("ExportStatus", "complete");
                             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "AKHelperSales.xlsx");
                         }
-                   // }
-                //    catch {
-                 //       HttpContext.Session.SetString("ExportStatus", "unKnown1");
-                //        return View();
-                  //  }
-                }
-            }
-        }
-        static void Main(string[] args)
-        {
-            // Step 1: Retrieve the server IP from the database
-            string serverIp = GetServerIpFromDatabase();
-
-            // Step 2: Format the connection string dynamically
-            string connectionString = FormatConnectionString(serverIp);
-
-            // Use the connection string to connect to the database
-            // For demonstration, let's just print the connection string
-            Console.WriteLine(connectionString);
-        }
-        static string GetServerIpFromDatabase()
-        {
-            string serverIp = string.Empty;
-            string connectionString = "Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=CkproUsers;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                string query = "SELECT TOP 1 server FROM Storeuser where Server='192.168.104.222/New'"; // Assuming you want the first server IP found
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    object result = command.ExecuteScalar();
-                    if (result != null)
-                    {
-                        serverIp = result.ToString();
+                        // }
+                        //    catch {
+                        //       HttpContext.Session.SetString("ExportStatus", "unKnown1");
+                        //        return View();
+                        //  }
                     }
                 }
             }
+            static void Main(string[] args)
+            {
+                // Step 1: Retrieve the server IP from the database
+                string serverIp = GetServerIpFromDatabase();
 
-            return serverIp;
-        }
+                // Step 2: Format the connection string dynamically
+                string connectionString = FormatConnectionString(serverIp);
 
-        static string FormatConnectionString(string serverIp)
-        {
-            // Assuming the rest of the connection string remains the same except for the server IP
-            string connectionStringFormat = "Server={0};User ID=sa;Password=P@ssw0rd;Database=RetailChannelDatabase;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
-            string connectionString = string.Format(connectionStringFormat, serverIp);
-            return connectionString;
-        }
-        [HttpPost]
-        public IActionResult Index(SalesParameters Parobj)
-        {
-            DataCenterContext db = new DataCenterContext();
-            CkproUsersContext db2 = new CkproUsersContext();
-            CkhelperdbContext db3 = new CkhelperdbContext();
-            DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
-            db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
-            db3.Database.SetCommandTimeout(7200);// Set the timeout in seconds
-            db4.Database.SetCommandTimeout(7200);// Set the timeout in seconds
-            var username = HttpContext.Session.GetString("Username");
-            var Role = HttpContext.Session.GetString("Role");
-            ViewBag.Username = username;
-            ViewBag.Role = Role;
+                // Use the connection string to connect to the database
+                // For demonstration, let's just print the connection string
+                Console.WriteLine(connectionString);
+            }
+            static string GetServerIpFromDatabase()
+            {
+                string serverIp = string.Empty;
+                string connectionString = "Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=CkproUsers;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
 
-            ViewBag.VBStore = db2.Storeusers
-                    .Where(s => s.Dmanager == username || s.Username == username)
-                .GroupBy(m => m.Name)
-                .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })//group.First().StoreIdD + ":" +
-                .OrderBy(m => m.Name)
-                .ToList();
-            ViewBag.VBDepartment = db.Departments
-                                                 .GroupBy(m => m.Name)
-                                                 .Select(group => new { Code = group.First().Code, Name = group.Key })
-                                                 .OrderBy(m => m.Name)
-                                                 .ToList();
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string query = "SELECT TOP 1 server FROM Storeuser where Server='192.168.104.222/New'"; // Assuming you want the first server IP found
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        object result = command.ExecuteScalar();
+                        if (result != null)
+                        {
+                            serverIp = result.ToString();
+                        }
+                    }
+                }
 
-            //Supplier List Text=SupplierName , Value = Code 
-            ViewBag.VBSupplier = db.Suppliers
-                                             .GroupBy(m => m.SupplierName)
-                                                 .Select(group => new { Code = group.First().Code, SupplierName = group.Key })
-                                                 .OrderBy(m => m.SupplierName)
-                                                 .ToList();
+                return serverIp;
+            }
 
-            ViewBag.VBItemBarcode = db.Items.Select(m => new { m.Id, m.ItemLookupCode }).Distinct();
-            ViewBag.VBStoreFranchise = db.Stores
-                 .Where(m => m.Franchise != null)
-                 .Select(m => m.Franchise)
-                 .Distinct()
-                 .ToList();
-            // Dynamic GroupBy based on selected values
-            IQueryable<dynamic> reportData1;
-            string[] storeVal = Parobj.Store.Split(':');
-            string connectionString1 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
-            string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
-            string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
-            string serverIp = GetServerIpFromDatabase();
+            static string FormatConnectionString(string serverIp)
+            {
+                // Assuming the rest of the connection string remains the same except for the server IP
+                string connectionStringFormat = "Server={0};User ID=sa;Password=P@ssw0rd;Database=RetailChannelDatabase;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;";
+                string connectionString = string.Format(connectionStringFormat, serverIp);
+                return connectionString;
+            }
+            [HttpPost]
+            public IActionResult Index(SalesParameters Parobj)
+            {
+                DataCenterContext db = new DataCenterContext();
+                CkproUsersContext db2 = new CkproUsersContext();
+                CkhelperdbContext db3 = new CkhelperdbContext();
+                DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+                db.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+                db3.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+                db4.Database.SetCommandTimeout(7200);// Set the timeout in seconds
+                var username = HttpContext.Session.GetString("Username");
+                var Role = HttpContext.Session.GetString("Role");
+                ViewBag.Username = username;
+                ViewBag.Role = Role;
 
-            // Step 2: Format the connection string dynamically
-            //string connectionString = FormatConnectionString(serverIp);
-            // Call the ExportToExcel method
+                ViewBag.VBStore = db2.Storeusers
+                        .Where(s => s.Dmanager == username || s.Username == username)
+                    .GroupBy(m => m.Name)
+                    .Select(group => new { Store = group.First().Storenumber + ":" + group.First().RmsstoNumber, Name = group.Key })//group.First().StoreIdD + ":" +
+                    .OrderBy(m => m.Name)
+                    .ToList();
+                ViewBag.VBDepartment = db.Departments
+                                                     .GroupBy(m => m.Name)
+                                                     .Select(group => new { Code = group.First().Code, Name = group.Key })
+                                                     .OrderBy(m => m.Name)
+                                                     .ToList();
 
-            if (Parobj.RMS || Parobj.TMT)
+                //Supplier List Text=SupplierName , Value = Code 
+                ViewBag.VBSupplier = db.Suppliers
+                                                 .GroupBy(m => m.SupplierName)
+                                                     .Select(group => new { Code = group.First().Code, SupplierName = group.Key })
+                                                     .OrderBy(m => m.SupplierName)
+                                                     .ToList();
+
+                ViewBag.VBItemBarcode = db.Items.Select(m => new { m.Id, m.ItemLookupCode }).Distinct();
+                ViewBag.VBStoreFranchise = db.Stores
+                     .Where(m => m.Franchise != null)
+                     .Select(m => m.Franchise)
+                     .Distinct()
+                     .ToList();
+                // Dynamic GroupBy based on selected values
+                IQueryable<dynamic> reportData1;
+                string[] storeVal = Parobj.Store.Split(':');
+                string connectionStringAXDB = string.Format("Server=192.168.1.210;User ID=sa;Password=P@ssw0rd;Database=AXDB;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+                string connectionString = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+                string connectionString2 = string.Format("Server=192.168.1.156;User ID=sa;Password=P@ssw0rd;Database=DATA_CENTER_Prev_Yrs;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+                string connectionStringTop = string.Format("Server=DESKTOP-IKM7HQ7\\NEW;User ID=sa;Password=P@ssw0rd;Database=TopSoft;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
+                string serverIp = GetServerIpFromDatabase();
+
+                // Step 2: Format the connection string dynamically
+                //string connectionString = FormatConnectionString(serverIp);
+                // Call the ExportToExcel method
+
+                if (Parobj.RMS)
                 {
                     return ExportToExcel(connectionString, Parobj);
-                 }
-            else if (Parobj.DBbefore)
-            {
-                return ExportToExcel(connectionString2, Parobj);
-            }
-            // if Not RMS or TMT
-            else
-            {
-                return View();
-            }
-            ViewBag.Data = reportData1;
-            //  }
-            //TempData["Al"] = " „ «·Õ›Ÿ »›÷· «··Â";
-            //var reportData1 = ViewBag.Data as IEnumerable<dynamic>;
-            Parobj.exportAfterClick = true;
-            if (Parobj.exportAfterClick == false)
-            {
-                return View();
-            }
-
-            else
-            {
-                // return View();
-                return ExportReportData(reportData1, Parobj);
-            }
-            //TempData["Al"] = " „ «·Õ›Ÿ »›÷· «··Â";
-
-        
-        //Parobj.exportAfterClick = true;
-            //if (Parobj.exportAfterClick == false)
-            //{
-            //    return View();
-            //}
-            //else if (Parobj.TMT)
-            //{
-            //    return ExportToExcelAx(connectionString, Parobj);
-            //}
-
-        }
-        public IActionResult CheckExportStatus()
-        {
-            // Read the session variable
-            var exportStatus = HttpContext.Session.GetString("ExportStatus");
-            if (exportStatus == "complete")
-            {
-                // If the status is "complete", reset it to an empty string or any other default value
-                HttpContext.Session.SetString("ExportStatus", "");
-                return Content("complete");
-            }
-            return Content(exportStatus ?? "unknown");
-        }
-        private IActionResult ExportReportData(IEnumerable<dynamic> reportData1, SalesParameters Parobj)
-        {
-            HttpContext.Session.SetString("ExportStatus", "started");
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("AKSalesReport");
-                // Add header row
-                int columnCount = 1; // Start with the first column (A)
-
-                if (Parobj.VPerYear || Parobj.VPerMonYear)
-                    worksheet.Cells[1, columnCount++].Value = "Date Per Year";
-                if (Parobj.VPerMon || Parobj.VPerMonYear)
-                    worksheet.Cells[1, columnCount++].Value = "Date Per Month";
-                if (Parobj.VPerDay)
-                    worksheet.Cells[1, columnCount++].Value = "Date Per Day";
-                if (Parobj.VStoreId)
-                    worksheet.Cells[1, columnCount++].Value = "Store Id";
-                if (Parobj.VStoreName)
-                    worksheet.Cells[1, columnCount++].Value = "Store Name";
-                if (Parobj.VDpId)
-                    worksheet.Cells[1, columnCount++].Value = "Department Id";
-                if (Parobj.VDepartment)
-                    worksheet.Cells[1, columnCount++].Value = "Department Name";
-                if (Parobj.VItemLookupCode)
-                    worksheet.Cells[1, columnCount++].Value = "Item Lookup Code";
-                if (Parobj.VItemName)
-                    worksheet.Cells[1, columnCount++].Value = "Item Name";
-                if (Parobj.VSupplierId)
-                    worksheet.Cells[1, columnCount++].Value = "Supplier Code";
-                if (Parobj.VSupplierName)
-                    worksheet.Cells[1, columnCount++].Value = "Supplier Name";
-                if (Parobj.VFranchise)
-                    worksheet.Cells[1, columnCount++].Value = "Franchise";
-                if (Parobj.VTransactionNumber)
-                    worksheet.Cells[1, columnCount++].Value = "Transaction Number";
-                if (Parobj.VQty)
-                    worksheet.Cells[1, columnCount++].Value = "Total Qty";
-                if (Parobj.VPrice)
-                    worksheet.Cells[1, columnCount++].Value = "Max Price";
-                if (Parobj.VCost)
-                    worksheet.Cells[1, columnCount++].Value = "Cost";
-                if (Parobj.VTotalSales)
-                    worksheet.Cells[1, columnCount++].Value = "Total Sales";
-                if (Parobj.VTransactionCount)
-                    worksheet.Cells[1, columnCount++].Value = "Transactions Count";
-                if (Parobj.VTotalCost)
-                    worksheet.Cells[1, columnCount++].Value = "Total Cost";
-                if (Parobj.VTotalTax)
-                    worksheet.Cells[1, columnCount++].Value = "Tax";
-                if (Parobj.VTotalSalesTax)
-                    worksheet.Cells[1, columnCount++].Value = "Total Sales Tax";
-                if (Parobj.VTotalSalesWithoutTax)
-                    worksheet.Cells[1, columnCount++].Value = "Total Sales Without Tax";
-                if (Parobj.VTotalCostQty)
-                    worksheet.Cells[1, columnCount++].Value = "Total Quantity Cost";
-                // Set header style
-                if (columnCount <= 1)
-                {
-                    // Log a message or throw an exception
-                    Console.WriteLine("Error: columnCount is 0. No data to process.");
-                    // Optionally, throw an exception to halt execution
-                    // throw new InvalidOperationException("columnCount is 0. No data to process.");
                 }
+                else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
+                {
+                    return ExportToExcel(connectionStringTop, Parobj);
+                }
+                else if (Parobj.DBbefore)
+                {
+                    return ExportToExcel(connectionString2, Parobj);
+                }
+                // if Not RMS or TMT
                 else
                 {
-                    using (var headerRange = worksheet.Cells[1, 1, 1, columnCount - 1])
-                    {
-                        headerRange.Style.Font.Bold = true;
-
-                        // Apply the border style
-                        headerRange.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                        headerRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                        headerRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                        headerRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                        // Apply the horizontal alignment
-                        headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                        // Apply the background color
-                        headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                        headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.SkyBlue);
-                        worksheet.Cells[1, 1, 1, columnCount - 1].AutoFilter = true;
-                    }
+                    return View();
                 }
-                int row = 2;
-                foreach (var item in reportData1)
+                ViewBag.Data = reportData1;
+                //  }
+                //TempData["Al"] = " „ «·Õ›Ÿ »›÷· «··Â";
+                //var reportData1 = ViewBag.Data as IEnumerable<dynamic>;
+                Parobj.exportAfterClick = true;
+                if (Parobj.exportAfterClick == false)
                 {
-                    columnCount = 1; // Reset column count for each row
+                    return View();
+                }
+
+                else
+                {
+                    // return View();
+                    return ExportReportData(reportData1, Parobj);
+                }
+                //TempData["Al"] = " „ «·Õ›Ÿ »›÷· «··Â";
+
+
+                //Parobj.exportAfterClick = true;
+                //if (Parobj.exportAfterClick == false)
+                //{
+                //    return View();
+                //}
+                //else if (Parobj.TMT)
+                //{
+                //    return ExportToExcelAx(connectionString, Parobj);
+                //}
+
+            }
+            public IActionResult CheckExportStatus()
+            {
+                // Read the session variable
+                var exportStatus = HttpContext.Session.GetString("ExportStatus");
+                if (exportStatus == "complete")
+                {
+                    // If the status is "complete", reset it to an empty string or any other default value
+                    HttpContext.Session.SetString("ExportStatus", "");
+                    return Content("complete");
+                }
+                return Content(exportStatus ?? "unknown");
+            }
+            private IActionResult ExportReportData(IEnumerable<dynamic> reportData1, SalesParameters Parobj)
+            {
+                HttpContext.Session.SetString("ExportStatus", "started");
+                using (var package = new ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("AKSalesReport");
+                    // Add header row
+                    int columnCount = 1; // Start with the first column (A)
 
                     if (Parobj.VPerYear || Parobj.VPerMonYear)
-                        worksheet.Cells[row, columnCount++].Value = item.PerYear;
+                        worksheet.Cells[1, columnCount++].Value = "Date Per Year";
                     if (Parobj.VPerMon || Parobj.VPerMonYear)
-                        worksheet.Cells[row, columnCount++].Value = item.PerMonth;
+                        worksheet.Cells[1, columnCount++].Value = "Date Per Month";
                     if (Parobj.VPerDay)
-                        worksheet.Cells[row, columnCount++].Value = item.PerDay;
+                        worksheet.Cells[1, columnCount++].Value = "Date Per Day";
                     if (Parobj.VStoreId)
-                        worksheet.Cells[row, columnCount++].Value = item.StoreId;
+                        worksheet.Cells[1, columnCount++].Value = "Store Id";
                     if (Parobj.VStoreName)
-                        worksheet.Cells[row, columnCount++].Value = item.StoreName;
+                        worksheet.Cells[1, columnCount++].Value = "Store Name";
                     if (Parobj.VDpId)
-                        worksheet.Cells[row, columnCount++].Value = item.DpId;
+                        worksheet.Cells[1, columnCount++].Value = "Department Id";
                     if (Parobj.VDepartment)
-                        worksheet.Cells[row, columnCount++].Value = item.DpName;
+                        worksheet.Cells[1, columnCount++].Value = "Department Name";
                     if (Parobj.VItemLookupCode)
-                        worksheet.Cells[row, columnCount++].Value = item.ItemLookupCodeTxt;
+                        worksheet.Cells[1, columnCount++].Value = "Item Lookup Code";
                     if (Parobj.VItemName)
-                        worksheet.Cells[row, columnCount++].Value = item.ItemName;
+                        worksheet.Cells[1, columnCount++].Value = "Item Name";
                     if (Parobj.VSupplierId)
-                        worksheet.Cells[row, columnCount++].Value = item.SupplierId;
+                        worksheet.Cells[1, columnCount++].Value = "Supplier Code";
                     if (Parobj.VSupplierName)
-                        worksheet.Cells[row, columnCount++].Value = item.SupplierName;
+                        worksheet.Cells[1, columnCount++].Value = "Supplier Name";
                     if (Parobj.VFranchise)
-                        worksheet.Cells[row, columnCount++].Value = item.StoreFranchise;
+                        worksheet.Cells[1, columnCount++].Value = "Franchise";
                     if (Parobj.VTransactionNumber)
-                        worksheet.Cells[row, columnCount++].Value = item.TransactionNumber;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Transaction Number";
                     if (Parobj.VQty)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalQty;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Qty";
                     if (Parobj.VPrice)
-                        worksheet.Cells[row, columnCount++].Value = item.Price;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Max Price";
                     if (Parobj.VCost)
-                        worksheet.Cells[row, columnCount++].Value = item.Cost;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Cost";
                     if (Parobj.VTotalSales)
-                        worksheet.Cells[row, columnCount++].Value = item.Total;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Sales";
                     if (Parobj.VTransactionCount)
-                        worksheet.Cells[row, columnCount++].Value = item.TransactionCount;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Transactions Count";
                     if (Parobj.VTotalCost)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalCost;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Cost";
                     if (Parobj.VTotalTax)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalTax;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Tax";
                     if (Parobj.VTotalSalesTax)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalSalesTax;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Sales Tax";
                     if (Parobj.VTotalSalesWithoutTax)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalSalesWithoutTax;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Sales Without Tax";
                     if (Parobj.VTotalCostQty)
-                        worksheet.Cells[row, columnCount++].Value = item.TotalCostQty;
-                    worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        worksheet.Cells[1, columnCount++].Value = "Total Quantity Cost";
+                    // Set header style
                     if (columnCount <= 1)
                     {
+                        // Log a message or throw an exception
                         Console.WriteLine("Error: columnCount is 0. No data to process.");
+                        // Optionally, throw an exception to halt execution
+                        // throw new InvalidOperationException("columnCount is 0. No data to process.");
+                    }
+                    else
+                    {
+                        using (var headerRange = worksheet.Cells[1, 1, 1, columnCount - 1])
+                        {
+                            headerRange.Style.Font.Bold = true;
+
+                            // Apply the border style
+                            headerRange.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            headerRange.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            headerRange.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            headerRange.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            // Apply the horizontal alignment
+                            headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                            // Apply the background color
+                            headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                            headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.SkyBlue);
+                            worksheet.Cells[1, 1, 1, columnCount - 1].AutoFilter = true;
+                        }
+                    }
+                    int row = 2;
+                    foreach (var item in reportData1)
+                    {
+                        columnCount = 1; // Reset column count for each row
+
+                        if (Parobj.VPerYear || Parobj.VPerMonYear)
+                            worksheet.Cells[row, columnCount++].Value = item.PerYear;
+                        if (Parobj.VPerMon || Parobj.VPerMonYear)
+                            worksheet.Cells[row, columnCount++].Value = item.PerMonth;
+                        if (Parobj.VPerDay)
+                            worksheet.Cells[row, columnCount++].Value = item.PerDay;
+                        if (Parobj.VStoreId)
+                            worksheet.Cells[row, columnCount++].Value = item.StoreId;
+                        if (Parobj.VStoreName)
+                            worksheet.Cells[row, columnCount++].Value = item.StoreName;
+                        if (Parobj.VDpId)
+                            worksheet.Cells[row, columnCount++].Value = item.DpId;
+                        if (Parobj.VDepartment)
+                            worksheet.Cells[row, columnCount++].Value = item.DpName;
+                        if (Parobj.VItemLookupCode)
+                            worksheet.Cells[row, columnCount++].Value = item.ItemLookupCodeTxt;
+                        if (Parobj.VItemName)
+                            worksheet.Cells[row, columnCount++].Value = item.ItemName;
+                        if (Parobj.VSupplierId)
+                            worksheet.Cells[row, columnCount++].Value = item.SupplierId;
+                        if (Parobj.VSupplierName)
+                            worksheet.Cells[row, columnCount++].Value = item.SupplierName;
+                        if (Parobj.VFranchise)
+                            worksheet.Cells[row, columnCount++].Value = item.StoreFranchise;
+                        if (Parobj.VTransactionNumber)
+                            worksheet.Cells[row, columnCount++].Value = item.TransactionNumber;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VQty)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalQty;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VPrice)
+                            worksheet.Cells[row, columnCount++].Value = item.Price;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VCost)
+                            worksheet.Cells[row, columnCount++].Value = item.Cost;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalSales)
+                            worksheet.Cells[row, columnCount++].Value = item.Total;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTransactionCount)
+                            worksheet.Cells[row, columnCount++].Value = item.TransactionCount;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalCost)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalCost;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalTax)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalTax;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalSalesTax)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalSalesTax;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalSalesWithoutTax)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalSalesWithoutTax;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (Parobj.VTotalCostQty)
+                            worksheet.Cells[row, columnCount++].Value = item.TotalCostQty;
+                        worksheet.Cells[row, columnCount].Style.Numberformat.Format = "#,##0.00";
+                        if (columnCount <= 1)
+                        {
+                            Console.WriteLine("Error: columnCount is 0. No data to process.");
+                        }
+
+                        // Auto fit columns
+
+                        //    // Log a message or throw an exception
+                        //    Console.WriteLine("Error: columnCount is 0. No data to process.");
+                        //    // Optionally, throw an exception to halt execution
+                        //    // throw new InvalidOperationException("columnCount is 0. No data to process.");
+                        //}
+                    }
+                    // Save the file
+                    var stream = new MemoryStream();
+                    package.SaveAs(stream);
+                    HttpContext.Session.SetString("ExportStatus", "complete");
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "AKSalesReport.xlsx");
+                }
+            }
+            [HttpGet]
+            [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
+            public async Task<IActionResult> LogOut()
+            {
+                // Sign out the user
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                // Set a TempData variable to indicate logout
+                TempData["IsLoggedOut"] = true;
+
+                // Clear session on logout
+                HttpContext.Session.Clear();
+
+                // Prevent caching by setting appropriate HTTP headers
+                //Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                //Response.Headers.Add("Pragma", "no-cache");
+                //Response.Headers.Add("Expires", "0");
+                try
+                {
+                    if (!Response.Headers.ContainsKey("Cache-Control"))
+                    {
+                        Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
                     }
 
-                    // Auto fit columns
+                    if (!Response.Headers.ContainsKey("Pragma"))
+                    {
+                        Response.Headers.Add("Pragma", "no-cache");
+                    }
 
-                    //    // Log a message or throw an exception
-                    //    Console.WriteLine("Error: columnCount is 0. No data to process.");
-                    //    // Optionally, throw an exception to halt execution
-                    //    // throw new InvalidOperationException("columnCount is 0. No data to process.");
-                    //}
+                    if (!Response.Headers.ContainsKey("Expires"))
+                    {
+                        Response.Headers.Add("Expires", "0");
+                    }
+
+                    return RedirectToAction("Login", "Login");
                 }
-                // Save the file
-                var stream = new MemoryStream();
-                package.SaveAs(stream);
-                HttpContext.Session.SetString("ExportStatus", "complete");
-                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "AKSalesReport.xlsx");
+
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception in LogOut action: {ex.Message}");
+                    return RedirectToAction("Login", "Login");
+                }
             }
-        }
-        [HttpGet]
-        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-        public async Task<IActionResult> LogOut()
-        {
-            // Sign out the user
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            // Set a TempData variable to indicate logout
-            TempData["IsLoggedOut"] = true;
-
-            // Clear session on logout
-            HttpContext.Session.Clear();
-
-            // Prevent caching by setting appropriate HTTP headers
-            //Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-            //Response.Headers.Add("Pragma", "no-cache");
-            //Response.Headers.Add("Expires", "0");
-            try
+            public IActionResult Privacy()
             {
-                if (!Response.Headers.ContainsKey("Cache-Control"))
-                {
-                    Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-                }
-
-                if (!Response.Headers.ContainsKey("Pragma"))
-                {
-                    Response.Headers.Add("Pragma", "no-cache");
-                }
-
-                if (!Response.Headers.ContainsKey("Expires"))
-                {
-                    Response.Headers.Add("Expires", "0");
-                }
-
-                return RedirectToAction("Login", "Login");
+                return View();
             }
 
-            catch (Exception ex)
+            public IActionResult index1()
             {
-                Console.WriteLine($"Exception in LogOut action: {ex.Message}");
-                return RedirectToAction("Login", "Login");
+                return View();
+            }
+            [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+            public IActionResult Error()
+            {
+                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
         }
-        public IActionResult Privacy()
-        {
-            return View();
-        }
 
-        public IActionResult index1()
-        {
-            return View();
-        }
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
-
-}
+    } 

@@ -192,6 +192,7 @@ namespace CK.Controllers
                 else
                     HttpContext.Session.SetString("Username", authenticatedUser.Username2);
                 HttpContext.Session.SetString("Role", authenticatedUser.Role);
+                HttpContext.Session.SetString("Server", authenticatedUser.Server);
                 CkproUsersContext db2 = new CkproUsersContext();
                 var username = HttpContext.Session.GetString("Username");
                 bool isDmanager = db2.RptUsers.Any(s => s.Dmanager == username);
