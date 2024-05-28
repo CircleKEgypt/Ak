@@ -42,7 +42,11 @@ public partial class CkproUsersContext : DbContext
             entity.Property(e => e.Fmanager)
                 .HasMaxLength(255)
                 .HasColumnName("FManager");
+            entity.Property(e => e.Inventlocation).HasMaxLength(255);
             entity.Property(e => e.Password).HasMaxLength(255);
+            entity.Property(e => e.RmsstoNumber)
+                .HasMaxLength(255)
+                .HasColumnName("RMSstoNumber");
             entity.Property(e => e.Role).HasMaxLength(100);
             entity.Property(e => e.Server).HasMaxLength(255);
             entity.Property(e => e.Storenumber)

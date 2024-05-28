@@ -3,7 +3,7 @@
 @{
     var role = ViewBag.Role;
     var username = ViewBag.IsUsername;
-    Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
     // if (role == "Manager")
     // {
     //     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -37,11 +37,24 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.3.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" media="screen" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.3/css/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.jqueryui.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.jqueryui.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/rowreorder/1.4.1/css/rowReorder.jqueryui.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.jqueryui.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.jqueryui.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.jqueryui.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.js"></script>
+    <script src="https://cdn.datatables.net/rowreorder/1.4.1/js/dataTables.rowReorder.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.js"></script>
+    <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/searchPanes.jqueryui.js"></script>
     <script type="text/javascript" src="/js/site.js"></script>
     <script>
         var preventBack = @Html.Raw(Json.Serialize(ViewData["PreventBack"] ?? false));
@@ -54,7 +67,12 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <style>
+        .main-footer
+        {
+            position:relative !important;
+        }
+    </style>
 </head>
 
 
@@ -106,13 +124,9 @@
                             @*                                 <img id="loader-gif" src="/images/loading-23.gif" alt="" />
                             *@@*                                 <img id="loader-gif2" src="/images/200w.gif" alt="" />
                             *@
-                            <li class="Displayli">
-                                <input type="checkbox" value="true" name="Parobj.VTotalSales" id="VTotalSales">
-                                <label for="VTotalSales">Total Sales</label>
-                            </li>
-                        </div>Elapsed Time :
-                        <div id="stopwatch" style="display:inline-block">00:00:00</div><br />
-                        <button type="submit" id="exportButton" class="btn btn-primary">Execute</button>
+                        </div>
+@*                         <div id="stopwatch" style="display:inline-block">00:00:00</div><br />
+ *@                        <button type="submit" id="exportButton" class="btn btn-primary">Execute</button>
                     </div>
                 </section>
             </form>
@@ -126,7 +140,7 @@
                                 <th>Itemlookupcode</th>
                                 <th>ItemName</th>
                                  <th>Balance</th>
-                                 <th style="display:none">Quantity</th>
+                                 <th >Quantity</th>
                              </tr>
                         </thead>
                         <tbody>
@@ -136,8 +150,8 @@
                                     <td>@dr.StoreName</td>
                                     <td>@dr.ItemLookupCode</td>
                                     <td>@dr.ItemName</td>
-                                    <td><input type="text" /></td>
-                                    <td style="display:none">@dr.Qty</td>
+                                    <td><input type="number" value="0" /></td>
+                                    <td >@dr.Qty</td>
                                  </tr>
                             }
                         </tbody>
@@ -146,154 +160,34 @@
             </div>
         </div>
     </div>
-   
-@*         <script>
-        let startTime, elapsed = 0;
-        let checkStatusInterval; // Define checkStatusInterval in a scope accessible to both functions
-        let stopwatchDisplay = document.getElementById('stopwatch');
-        let exportButton = document.getElementById('exportButton');
-        let exportForm = document.getElementById('exportForm');
-        let intervalId = null;
 
-        function startStopwatch() {
-            console.log('Starting stopwatch...');
-            startTime = Date.now();
-            intervalId = setInterval(() => {
-                elapsed = Date.now() - startTime;
-                stopwatchDisplay.textContent = formatElapsedTime(elapsed);
-            }, 100);
-            console.log('Stopwatch started with interval ID:', intervalId);
-        }
-
-        function stopStopwatch() {
-            if (intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
-        }
-
-        function formatElapsedTime(elapsed) {
-            let hours = Math.floor(elapsed / 3600000);
-            let minutes = Math.floor((elapsed % 3600000) / 60000);
-            let seconds = ((elapsed % 60000) / 1000).toFixed(0);
-            return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-        }
-
-        function pad(number) {
-            return number < 10 ? '0' + number : number;
-        }
-
-        exportButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            exportButton.disabled = true;
-
-            // Get the date input fields
-            let startDate = document.getElementById('startDate'); 
-            let endDate = document.getElementById('endDate');
-            let DBbefore = document.getElementById('DBbefore');
-            let TMT = document.getElementById('TMT');
-            let RMS = document.getElementById('RMS');
-            let checkboxes = [
-                { id: 'VFranchise', name: 'Parobj.VFranchise' },
-                { id: 'VStoreId', name: 'Parobj.VStoreId' },
-                { id: 'VStoreName', name: 'Parobj.VStoreName' },
-                { id: 'VSupplierId', name: 'Parobj.VSupplierId' },
-                { id: 'VSupplierName', name: 'Parobj.VSupplierName' },
-                { id: 'VDpId', name: 'Parobj.VDpId' },
-                { id: 'VDepartment', name: 'Parobj.VDepartment' },
-                { id: 'VItemLookupCode', name: 'Parobj.VItemLookupCode' },
-                { id: 'VItemName', name: 'Parobj.VItemName' },
-                { id: 'VQty', name: 'Parobj.VQty' },
-            ];
-
-            // Check if any of the checkboxes are not checked
-           // let unchecked = checkboxes.every(checkbox => !document.getElementById(checkbox.id).checked);
-            // Check if the date fields are filled out
-            // If the fields are filled out, start the stopwatch and submit the form
-            startStopwatch();
-            submitExportForm(); // Submit the export form
-        });
-
-     // Event listener for the cancel export button
-     cancelExportButton.addEventListener('click', function (event) {
-         event.preventDefault();
-         cancelExport(); // Call the cancelExport function
-     });
-
-     // Function to handle export submission
-     function submitExportForm() {
-            $(document).ready(function () {
-                $('#salesReportTable').DataTable({
-                    dom: 'Bfrtip', // Place the buttons at the top of the table
-                    buttons: [
-                        'pdfHtml5' // Enable PDF export
-                    ],
-                    // Other DataTables options go here
-                });
-            });
-            exportForm.submit(); // Submit the export form
-           
-                checkExportStatus(); // Check export status immediately after submission
-         return;
-                // Set up an interval to check export status periodically
-                checkStatusInterval = setInterval(checkExportStatus, 1000);
-
-     }
-
-        function checkExportStatus() {
-            $.ajax({
-                url: '/Stock/CheckExportStatus',
-                type: 'GET',
-                success: function (status) {
-                    console.log(status);
-                    if (status === 'unknown1') {
-                        alert('An error occurred during the export process. Please try again.');
-                        clearInterval(checkStatusInterval); // Clear the interval on error
-                    } else if (status === 'complete') {
-                        stopStopwatch();
-                        exportButton.disabled = false;
-                        // Optionally, clear the interval to stop checking the status if the process is complete
-                        clearInterval(checkStatusInterval);
-                    } else {
-                        setTimeout(checkExportStatus, 1000);
-                    }
-                },
-                error: function () {
-                    alert('An error occurred during the export process. Please try again.');
-                    exportButton.disabled = false;
-                    clearInterval(checkStatusInterval); // Clear the interval on error
-                }
-            });
-        }
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
     <script>
-        $(document).ready(function () {
-            var table = $('#salesReportTable').DataTable({
-                pageLength: 20, // Set the number of rows per page
-                lengthChange: true, // Enable the length change input control
-                dom: 'Blfrtip', // Define the placement of the buttons
-                buttons: [
-                    'pdf','excel' // Specify the buttons
-                ]
-            });
+        var ExportFormat = {
 
-            // Move the buttons to the top of the table
-            new $.fn.dataTable.Buttons(table, {
-                buttons: [
-                    'pdf'
-                ]
-            }).container().appendTo($('#example_wrapper').find('.col-sm-6:eq(0)'));
+            format: {
+                body: function (data, row, column, node) {
+                    //check if type is input using jquery
+                    return $('input', node).length ?
+                        $(node).find('input').val() :
+                        data;
+
+                }
+            }
+
+        };
+
+
+        var table = $('#salesReportTable').DataTable({
+            pageLength: 20, // Set the number of rows per page
+            dom: 'Bfrtip',
+            buttons: [{
+                extend: 'excelHtml5', exportOptions: ExportFormat
+            }]
+
+
+
         });
        
     </script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
 </body>
 </html>

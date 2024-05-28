@@ -27,6 +27,7 @@ using DocumentFormat.OpenXml.InkML;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.IO;
 namespace CK.Controllers
 {
     [Authorize]
@@ -532,6 +533,82 @@ namespace CK.Controllers
             CkproUsersContext db2 = new CkproUsersContext();
             CkhelperdbContext db3 = new CkhelperdbContext();
             DataCenterPrevYrsContext db4 = new DataCenterPrevYrsContext();
+            string RptSalesView = @"
+                                    select 
+                                    dp.code DpID,dp.ID GroupId, dp.Name DpName,
+                                    Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
+                                    T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
+                                    T.TransactionTime TransTime,
+                                    Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
+                                    convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
+                                    (T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
+                                    ,Convert (varchar(20),item.SupplierId )SupplierCode";
+            if (Parobj.VSupplierId || Parobj.VSupplierName)
+            {
+                RptSalesView += ",Sub.SupplierName";
+            }
+            RptSalesView += @"
+                                    ,s.DManager,s.Username,s.FManager from DATA_CENTER.dbo.TransactionEntry T 
+                                    left join DATA_CENTER.dbo.Item on Item.ID=T.ItemID and T.StoreID=Item.storeid
+                                    left join DATA_CENTER.dbo.department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
+                                    left join DATA_CENTER.dbo.Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
+                                    left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID )";
+            if (Parobj.VSupplierId || Parobj.VSupplierName)
+            {
+                RptSalesView += " left join DATA_CENTER.dbo.Supplier Sub on  Sub.storeid=stores.STORE_ID and Sub.id=item.SupplierID";
+            }
+            string RptSaleslinkView = @"
+                                    select 
+                                    dp.code DpID,dp.ID GroupId, dp.Name DpName,
+                                    Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
+                                    T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
+                                    T.TransactionTime TransTime,
+                                    Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
+                                    convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
+                                    (T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
+                                    ,Convert (varchar(20),item.SupplierId )SupplierCode";
+            if (Parobj.VSupplierId || Parobj.VSupplierName)
+            {
+                RptSaleslinkView += ",Sub.SupplierName";
+            }
+            RptSaleslinkView += @"
+                                    ,s.DManager,s.Username,s.FManager from [192.168.1.156].DATA_CENTER.dbo.TransactionEntry T 
+                                    left join  [192.168.1.156].DATA_CENTER.dbo.Item on Item.ID=T.ItemID and T.StoreID=Item.storeid
+                                    left join  [192.168.1.156].DATA_CENTER.dbo.department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
+                                    left join  [192.168.1.156].DATA_CENTER.dbo.Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
+                                    left join  [192.168.1.156].CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID )";
+            if (Parobj.VSupplierId || Parobj.VSupplierName)
+            {
+                RptSaleslinkView += " left join  [192.168.1.156].DATA_CENTER.dbo.Supplier Sub on  Sub.storeid=stores.STORE_ID and Sub.id=item.SupplierID";
+            }
+            string RptAXDBSalesView = @"select *,s.DManager,s.Username,s.FManager from AXDBSales
+                        left join Storeuser S on S.storenumber= AXDBSales.StoreID";
+            string RptSalesAllView = @"select DpID COLLATE SQL_Latin1_General_CP1_CI_AS DpID ,
+                                    DpName COLLATE SQL_Latin1_General_CP1_CI_AS DpName,
+                                    convert(varchar(20),StoreId) StoreId,
+                                    convert(varchar(20),StoreId) StoreIdR,
+                                    StoreName COLLATE SQL_Latin1_General_CP1_CI_AS StoreName
+                                    ,StoreFranchise COLLATE SQL_Latin1_General_CP1_CI_AS StoreFranchise,ItemLookupCode,
+                                    ItemName COLLATE SQL_Latin1_General_CP1_CI_AS ItemName,TransTime,
+                                    Cast(TransDate as date)TransDate,qty,price,TotalSales,TransactionNumber COLLATE SQL_Latin1_General_CP1_CI_AS TransactionNumber,Cost 
+                                     ,ByMonth,ByYear,ByDay,0 As StoreIdD,Tax,TotalSalesTax,TotalSalesWithoutTax,(TotalCostQty)TotalCostQty
+                                     ,DManager COLLATE SQL_Latin1_General_CP1_CI_AS DManager,FManager COLLATE SQL_Latin1_General_CP1_CI_AS FManager,Username COLLATE SQL_Latin1_General_CP1_CI_AS Username
+                                      from  ("+ RptSaleslinkView+ ")RptAXDBSales" +
+                                      @"
+                                    union all
+                                    select DpId,
+                                    DpName COLLATE SQL_Latin1_General_CP1_CI_AS DpName,
+                                    StoreID as StoreID,
+                                    '0' as StoreID,
+                                    StoreName StoreNameR,
+                                    StoreFranchise ,
+                                    ItemLookupCode COLLATE SQL_Latin1_General_CP1_CI_AS,ItemName COLLATE SQL_Latin1_General_CP1_CI_AS ItemName,
+                                    TransTime,Cast(TransDate as date)TransDate,Qty,Price,TotalSales,TransactionNumber,Cost
+                                    ,ByMonth,ByYear,ByDay,convert(varchar(20),StoreId) StoreIdD,Tax,TotalSalesTax,TotalSalesWithoutTax,(TotalCostQty)TotalCostQty
+                                    ,s.DManager,s.FManager,s.Username
+                                     from AXDBSales r
+                                      left join Storeuser s on s.storenumber  =Convert (varchar(20),r.StoreID ) collate SQL_Latin1_General_CP1_CI_AS
+";
             Storeuser n = new Storeuser();
             var username = HttpContext.Session.GetString("Username");
             var Role = HttpContext.Session.GetString("Role");
@@ -596,34 +673,16 @@ namespace CK.Controllers
             string[] storeVal = Parobj.Store.Split(':');
             if ((Parobj.RMS && Parobj.TMT == false) || (Parobj.RMS && storeVal[0] == "RMS"))
             {
-                fromWhereClause = @"FROM
-            (select 
-            dp.code DpID,dp.ID GroupId, dp.Name DpName,
-            Stores.ID StoreCode ,T.StoreID StoreID,Stores.LOCATION StoreName,Stores.FRANCHISE StoreFranchise,
-            T.ItemID ItemID,Item.Description ItemName,Item.ItemLookupCode,
-            T.TransactionTime TransTime,
-            Day(T.TransactionTime) ByDay,Month(T.TransactionTime) ByMonth,Year(T.TransactionTime)ByYear, Cast(T.TransactionTime as date) TransDate,T.Quantity Qty,T.Price Price,(T.Quantity * T.Price) TotalSales,
-            convert(varchar(20),T.TransactionNumber)TransactionNumber,T.Cost,-((T.Cost)*-(T.Quantity)) TotalCostQty,((T.Quantity*T.Price)-(T.Cost*T.Quantity))Profit,T.SalesTax Tax,
-            (T.Quantity*T.Price)TotalSalesTax,((T.Quantity*T.Price)-T.SalesTax)TotalSalesWithoutTax,((T.Quantity*T.Cost)-T.SalesTax)TotalCostWithoutTax
-            ,Convert (varchar(20),item.SupplierId )SupplierCode";
-                if (Parobj.VSupplierId || Parobj.VSupplierName)
-                {
-                    fromWhereClause += ",Sub.SupplierName";
-                }
-                fromWhereClause += @",s.DManager,s.Username,s.FManager from TransactionEntry T 
-            left join Item on Item.ID=T.ItemID and T.StoreID=Item.storeid --and item.Quantity!=0
-            left join department dp on dp.ID=Item.DepartmentID and dp.storeid=Item.storeid
-            left join Stores on (Stores.STORE_ID=Item.storeid or Item.storeid is null) and Stores.STORE_ID=T.StoreID
-            left join CkproUsers.dbo.Storeuser s on s.RMSstoNumber=Convert (varchar(20),T.StoreID )";
-                    if (Parobj.VSupplierId || Parobj.VSupplierName)
-                    {
-                        fromWhereClause += "left join Supplier Sub on  Sub.storeid=stores.STORE_ID and Sub.id=item.SupplierID";
-                    }
-                    fromWhereClause += ")RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                fromWhereClause = "from ("+RptSalesView+ ")RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                //    if (Parobj.VSupplierId || Parobj.VSupplierName)
+                //    {
+                //        fromWhereClause += "left join Supplier Sub on  Sub.storeid=stores.STORE_ID and Sub.id=item.SupplierID";
+                //    }
+                //    fromWhereClause += RptSalesView+")RptSales WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                 }
                 else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
                 {
-                    fromWhereClause = "FROM AXDBSales where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    fromWhereClause = "FROM ("+RptAXDBSalesView+")RptAXDBSales where CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
                     //fromWhereClause ="from (Select SalesD.TRANSACTIONID TransactionNumber,SalesH.STORE StoreID,SalesD.COSTAMOUNT Cost--,Store.Name StoreName,SalesD.ITEMID ItemLookupCode,-TAXAMOUNT Tax,Day(SalesH.TRANSDATE) ByDay,Month(SalesH.TRANSDATE) ByMonth,Year(SalesH.TRANSDATE)ByYear,SalesH.TRANSDATE TransTime,SalesH.TRANSDATE As TransDate,-SalesD.Qty Qty,-(SalesD.COSTAMOUNT*SalesD.Qty)TotalCostQty,SalesD.Price Price,-(SalesD.NETAMOUNTINCLTAX) TotalSales,-(SalesD.NETAMOUNTINCLTAX) TotalSalesTax, -(SalesD.NETAMOUNT) TotalSalesWithoutTax,Case when SalesH.STORE='143' then 'Sub-Franchise' else 'TMT' end As StoreFranchise ,INV.[Primaryvendorid] SupplierName, INV.[Primaryvendorid] SupplierCode ,It.[NAME] ItemName from  RetailChannelDatabase.ax.RetailTransactiontable SalesH INNER JOIN RetailChannelDatabase.ax.RETAILTRANSACTIONSALESTRANS SalesD ON SalesH.TRANSACTIONID = SalesD.TRANSACTIONID INNER JOIN  RetailChannelDatabase.ax.[Inventtable] as INV on SalesD.ITEMID = INV.ITEMID inner JOIN  RetailChannelDatabase.ax.[Ecoresproducttranslation] as It on INV.PRODUCT = It.PRODUCT   where SalesH.ENTRYSTATUS!=1  and SalesH.TYPE=2 AND INV.[DATAAREAID] = 'tmt' )s";            }
                 }
                 //if (Parobj.RMS && Parobj.TMT && storeVal[0] != "RMS" && storeVal[1] != "Dy" || (Parobj.RMS && Parobj.TMT && storeVal[0] == "0" && storeVal[1] == "0"))
@@ -634,14 +693,15 @@ namespace CK.Controllers
                 }
                 else
                 {
-                    if (Parobj.VSupplierId || Parobj.VSupplierName)
-                    {
-                        fromWhereClause = "from RptSalesAllwithSuppllier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                    }
-                    else
-                    {
-                        fromWhereClause = "from RptSalesAll WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
-                    }
+                    //if (Parobj.VSupplierId || Parobj.VSupplierName)
+                    //{
+                   
+                    //    fromWhereClause = "from RptSalesAllwithSuppllier WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    //}
+                    //else
+                    //{
+                        fromWhereClause = "from ("+RptSalesAllView+")RptSalesAll WHERE CAST(TransDate AS DATE) BETWEEN @fromDate AND @toDate ";
+                    //}
                 }
                 // string MessageBox = string.Empty;
                 // Add department filter if a department is specified
@@ -1257,19 +1317,23 @@ namespace CK.Controllers
                 string connectionStringTop = string.Format("Server=DESKTOP-IKM7HQ7\\NEW;User ID=sa;Password=P@ssw0rd;Database=TopSoft;Connect Timeout=7200;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;");
                 string serverIp = GetServerIpFromDatabase();
 
-                // Step 2: Format the connection string dynamically
-                //string connectionString = FormatConnectionString(serverIp);
-                // Call the ExportToExcel method
+            // Step 2: Format the connection string dynamically
+            //string connectionString = FormatConnectionString(serverIp);
+            // Call the ExportToExcel method
 
-                if (Parobj.RMS)
-                {
-                    return ExportToExcel(connectionString, Parobj);
+            if ((Parobj.RMS && Parobj.TMT == false) || (Parobj.RMS && storeVal[0] == "RMS"))
+            {
+                return ExportToExcel(connectionString, Parobj);
                 }
                 else if (Parobj.RMS == false && Parobj.TMT || (storeVal.Length > 1 && storeVal[1] == "Dy"))
                 {
                     return ExportToExcel(connectionStringTop, Parobj);
                 }
-                else if (Parobj.DBbefore)
+            else if (Parobj.RMS && Parobj.TMT)
+            {
+                return ExportToExcel(connectionStringTop, Parobj);
+            }
+            else if (Parobj.DBbefore)
                 {
                     return ExportToExcel(connectionString2, Parobj);
                 }

@@ -35,7 +35,7 @@ public partial class RptSale
 
     public DateTime? TransDate { get; set; }
 
-    public double Qty { get; set; }
+    public decimal Qty { get; set; }
 
     public decimal Price { get; set; }
 

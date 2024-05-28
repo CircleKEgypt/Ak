@@ -7,9 +7,13 @@ public partial class RptUser
 {
     public string? Storenumber { get; set; }
 
+    public string? RmsstoNumber { get; set; }
+
     public string? Username2 { get; set; }
 
     public string? Username { get; set; }
+
+    public string? Inventlocation { get; set; }
 
     public string? Password { get; set; }
 
